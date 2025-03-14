@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
@@ -70,7 +69,7 @@ const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }
   // Get row background based on date
   const getRowClass = () => {
     if (isToday) {
-      return "bg-today-row table-row-hover";
+      return "today-highlight table-row-hover";
     }
     return "table-row-hover";
   };

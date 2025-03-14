@@ -140,7 +140,7 @@
   }
   
   /* Today's row should override zebra striping */
-  .table-container tbody tr.bg-today-row {
-    @apply bg-today-row;
+  .table-container tbody tr.today-highlight {
+    @apply bg-[#FFF8DC];
   }
 }
