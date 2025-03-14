@@ -121,36 +121,6 @@ const Index = () => {
             filters={filters}
             setFilters={setFilters}
           />
-          
-          <div className="mt-4 flex justify-center">
-            <button
-              className="bg-navy text-white px-4 py-2 rounded-md mr-4 hover:bg-opacity-90 transition-colors"
-              onClick={() => {
-                const today = new Date();
-                setFilters({
-                  ...filters,
-                  examDate: today
-                });
-              }}
-            >
-              Filtrar
-            </button>
-            <button
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
-              onClick={() => {
-                setFilters({
-                  studentName: '',
-                  module: '',
-                  pcNumber: '',
-                  examDate: null,
-                  examTime: '',
-                  status: 'all'
-                });
-              }}
-            >
-              Limpar Filtros
-            </button>
-          </div>
         </div>
         
         <ScheduleTable 
@@ -159,11 +129,13 @@ const Index = () => {
           onDelete={handleDeleteExam}
         />
         
-        <ExamPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+        {filteredExams.length > ITEMS_PER_PAGE && (
+          <ExamPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Search, X } from 'lucide-react';
@@ -18,29 +17,15 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { FilterState } from '@/lib/types';
-import { pcNumbers, timeSlots } from '@/lib/data';
 
 interface FilterBarProps {
-  onFilter: (filters: FilterState) => void;
+  filters: FilterState;
+  setFilters: (filters: FilterState) => void;
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
-  const [filters, setFilters] = useState<FilterState>({
-    studentName: '',
-    module: '',
-    pcNumber: '',
-    examDate: null,
-    examTime: '',
-    status: ''
-  });
-
+const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
   const handleChange = (field: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onFilter(filters);
+    setFilters({ ...filters, [field]: value });
   };
 
   const clearFilters = () => {
@@ -50,15 +35,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
       pcNumber: '',
       examDate: null,
       examTime: '',
-      status: ''
+      status: 'all'
     };
     setFilters(resetFilters);
-    onFilter(resetFilters);
   };
 
   return (
     <div className="w-full bg-light-blue rounded-lg p-5 mb-6 shadow-sm border border-border animate-fade-up">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-7 gap-4">
           {/* Student Name Filter */}
           <div className="relative">
@@ -106,9 +90,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
                 <SelectValue placeholder="Selecione o PC" />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-72">
-                <SelectItem value="all">Todos</SelectItem>
-                {pcNumbers.map((num) => (
-                  <SelectItem key={num} value={num}>
+                <SelectItem value="">Todos</SelectItem>
+                {Array.from({ length: 14 }, (_, i) => i + 1).map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
                     PC {num}
                   </SelectItem>
                 ))}
@@ -163,8 +147,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
                 <SelectValue placeholder="Selecione o horário" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {timeSlots.map((time) => (
+                <SelectItem value="">Todos</SelectItem>
+                {["7:30", "8:30", "9:30", "14:00", "15:00", "16:00", "17:00"].map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>
@@ -193,24 +177,32 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
               </SelectContent>
             </Select>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="flex items-end space-x-2">
-            <Button 
-              type="submit" 
-              className="button-primary flex-1"
-            >
-              Filtrar
-            </Button>
-            <Button
-              type="button"
-              className="button-secondary flex-1"
-              onClick={clearFilters}
-            >
-              <X className="mr-1 h-4 w-4" />
-              Limpar
-            </Button>
-          </div>
+        </div>
+        
+        {/* Center the action buttons */}
+        <div className="flex justify-center mt-4 space-x-4">
+          <Button 
+            type="button" 
+            className="button-primary"
+            onClick={() => {
+              // Keep the filter logic, but prevent form submission
+              const today = new Date();
+              setFilters({
+                ...filters,
+                examDate: today
+              });
+            }}
+          >
+            Filtrar
+          </Button>
+          <Button
+            type="button"
+            className="button-secondary"
+            onClick={clearFilters}
+          >
+            <X className="mr-1 h-4 w-4" />
+            Limpar
+          </Button>
         </div>
       </form>
     </div>
