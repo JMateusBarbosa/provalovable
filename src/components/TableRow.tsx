@@ -1,17 +1,14 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ExamSchedule, ExamType, ExamStatus } from '@/lib/types';
-import { pcNumbers, timeSlots } from '@/lib/data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ExamSchedule, ExamStatus } from '@/lib/types';
+import { timeSlots } from '@/lib/data';
 
 interface TableRowProps {
   exam: ExamSchedule;
@@ -22,50 +19,43 @@ interface TableRowProps {
 
 const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedExam, setEditedExam] = useState<Partial<ExamSchedule>>({});
-
-  const handleEditStart = () => {
-    setEditedExam({
-      module: exam.module,
-      pcNumber: exam.pcNumber,
-      examDate: exam.examDate,
-      examTime: exam.examTime,
-      examType: exam.examType,
-      status: exam.status,
-    });
+  const [updatedExam, setUpdatedExam] = useState<Partial<ExamSchedule>>({});
+  
+  const handleEdit = () => {
+    setUpdatedExam({});
     setIsEditing(true);
   };
-
-  const handleEditCancel = () => {
+  
+  const handleCancel = () => {
     setIsEditing(false);
-    setEditedExam({});
+    setUpdatedExam({});
   };
-
-  const handleEditSave = () => {
-    onUpdate(exam.id, editedExam);
+  
+  const handleSave = () => {
+    if (Object.keys(updatedExam).length > 0) {
+      onUpdate(exam.id, updatedExam);
+    }
     setIsEditing(false);
-    setEditedExam({});
+  };
+  
+  const handleChange = (field: keyof ExamSchedule, value: any) => {
+    setUpdatedExam(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleInputChange = (field: keyof ExamSchedule, value: any) => {
-    setEditedExam(prev => ({ ...prev, [field]: value }));
+  // Function to get status badge class
+  const getStatusBadgeClass = (status: ExamStatus) => {
+    switch (status) {
+      case 'Pendente':
+        return 'status-badge status-pending';
+      case 'Aprovado':
+        return 'status-badge status-approved';
+      case 'Reprovado':
+        return 'status-badge status-failed';
+      default:
+        return 'status-badge';
+    }
   };
-
-  // Status badge renderer
-  const renderStatusBadge = (status: ExamStatus) => {
-    const statusClasses = {
-      'Pendente': 'status-badge status-pending',
-      'Aprovado': 'status-badge status-approved',
-      'Reprovado': 'status-badge status-failed',
-    };
-    
-    return (
-      <span className={statusClasses[status]}>
-        {status}
-      </span>
-    );
-  };
-
+  
   // Get row background based on date
   const getRowClass = () => {
     if (isToday) {
@@ -76,16 +66,26 @@ const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }
 
   return (
     <tr className={getRowClass()}>
-      {/* Student Name - Not editable */}
-      <td className="px-4 py-3 border-b">{exam.studentName}</td>
+      {/* Student Name */}
+      <td className="px-4 py-3 border-b">
+        {isEditing ? (
+          <Input
+            className="w-full border rounded px-2 py-1"
+            defaultValue={exam.studentName}
+            onChange={(e) => handleChange('studentName', e.target.value)}
+          />
+        ) : (
+          exam.studentName
+        )}
+      </td>
       
       {/* Module */}
       <td className="px-4 py-3 border-b">
         {isEditing ? (
           <Input
-            value={editedExam.module || exam.module}
-            onChange={(e) => handleInputChange('module', e.target.value)}
-            className="max-w-[200px]"
+            className="w-full border rounded px-2 py-1"
+            defaultValue={exam.module}
+            onChange={(e) => handleChange('module', e.target.value)}
           />
         ) : (
           exam.module
@@ -93,42 +93,55 @@ const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }
       </td>
       
       {/* PC Number */}
-      <td className="px-4 py-3 border-b text-center">
+      <td className="px-4 py-3 text-center border-b">
         {isEditing ? (
-          <Select
-            value={String(editedExam.pcNumber || exam.pcNumber)}
-            onValueChange={(value) => handleInputChange('pcNumber', parseInt(value))}
-          >
-            <SelectTrigger className="w-24 mx-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pcNumbers.map((num) => (
-                <SelectItem key={num} value={num}>
-                  PC {num}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            className="w-20 text-center border rounded px-2 py-1 mx-auto"
+            type="number"
+            min="1"
+            max="14"
+            defaultValue={exam.pcNumber}
+            onChange={(e) => handleChange('pcNumber', Number(e.target.value))}
+          />
         ) : (
-          `PC ${exam.pcNumber}`
+          exam.pcNumber
         )}
       </td>
       
       {/* Exam Date */}
-      <td className="px-4 py-3 border-b text-center">
-        {format(exam.examDate, 'dd/MM/yyyy')}
+      <td className="px-4 py-3 text-center border-b whitespace-nowrap">
+        {isEditing ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-32">
+                {updatedExam.examDate 
+                  ? format(updatedExam.examDate, 'dd/MM/yyyy')
+                  : format(exam.examDate, 'dd/MM/yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={updatedExam.examDate || exam.examDate}
+                onSelect={date => handleChange('examDate', date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        ) : (
+          format(exam.examDate, 'dd/MM/yyyy')
+        )}
       </td>
       
       {/* Exam Time */}
-      <td className="px-4 py-3 border-b text-center">
+      <td className="px-4 py-3 text-center border-b">
         {isEditing ? (
           <Select
-            value={editedExam.examTime || exam.examTime}
-            onValueChange={(value) => handleInputChange('examTime', value)}
+            defaultValue={exam.examTime}
+            onValueChange={(value) => handleChange('examTime', value)}
           >
             <SelectTrigger className="w-24 mx-auto">
-              <SelectValue />
+              <SelectValue placeholder={exam.examTime} />
             </SelectTrigger>
             <SelectContent>
               {timeSlots.map((time) => (
@@ -144,35 +157,19 @@ const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }
       </td>
       
       {/* Exam Type */}
-      <td className="px-4 py-3 border-b text-center">
-        {isEditing ? (
-          <Select
-            value={editedExam.examType || exam.examType}
-            onValueChange={(value) => handleInputChange('examType', value as ExamType)}
-          >
-            <SelectTrigger className="w-24 mx-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="P1">P1</SelectItem>
-              <SelectItem value="Rec.1">Rec.1</SelectItem>
-              <SelectItem value="Rec.2">Rec.2</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          exam.examType
-        )}
+      <td className="px-4 py-3 text-center border-b whitespace-nowrap">
+        {exam.examType}
       </td>
       
       {/* Status */}
-      <td className="px-4 py-3 border-b text-center">
+      <td className="px-4 py-3 text-center border-b">
         {isEditing ? (
           <Select
-            value={editedExam.status || exam.status}
-            onValueChange={(value) => handleInputChange('status', value as ExamStatus)}
+            defaultValue={exam.status}
+            onValueChange={(value) => handleChange('status', value as ExamStatus)}
           >
             <SelectTrigger className="w-28 mx-auto">
-              <SelectValue />
+              <SelectValue placeholder={exam.status} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Pendente">Pendente</SelectItem>
@@ -181,53 +178,49 @@ const TableRow: React.FC<TableRowProps> = ({ exam, isToday, onUpdate, onDelete }
             </SelectContent>
           </Select>
         ) : (
-          renderStatusBadge(exam.status)
+          <span className={getStatusBadgeClass(exam.status)}>
+            {exam.status}
+          </span>
         )}
       </td>
       
       {/* Actions */}
-      <td className="px-4 py-3 border-b text-center">
-        <div className="flex justify-center space-x-2">
-          {isEditing ? (
-            <>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 bg-approved text-white hover:bg-approved/80"
-                onClick={handleEditSave}
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 bg-gray-400 text-white hover:bg-gray-500"
-                onClick={handleEditCancel}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 bg-blue-500 text-white hover:bg-blue-600"
-                onClick={handleEditStart}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 bg-failed text-white hover:bg-failed/80"
-                onClick={() => onDelete(exam.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
+      <td className="px-4 py-3 text-center border-b space-x-1">
+        {isEditing ? (
+          <div className="flex justify-center space-x-1">
+            <button 
+              onClick={handleSave}
+              className="text-white bg-approved hover:bg-opacity-90 rounded-md p-1.5 transition-all duration-200"
+              title="Salvar"
+            >
+              <Check size={16} />
+            </button>
+            <button 
+              onClick={handleCancel}
+              className="text-white bg-failed hover:bg-opacity-90 rounded-md p-1.5 transition-all duration-200"
+              title="Cancelar"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-center space-x-1">
+            <button 
+              onClick={handleEdit}
+              className="button-edit"
+              title="Editar"
+            >
+              <Pencil size={16} />
+            </button>
+            <button 
+              onClick={() => onDelete(exam.id)}
+              className="button-delete"
+              title="Excluir"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
       </td>
     </tr>
   );

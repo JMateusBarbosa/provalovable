@@ -1,138 +1,170 @@
 
 import React, { useState, useEffect } from 'react';
-import { isSameDay, parseISO } from 'date-fns';
-import { useToast } from '@/components/ui/use-toast';
-import Navbar from '@/components/Navbar';
-import FilterBar from '@/components/FilterBar';
+import { format } from 'date-fns';
+import { Toaster } from '@/components/ui/toaster';
+import { toast } from '@/components/ui/use-toast';
 import ScheduleTable from '@/components/ScheduleTable';
-import { ExamSchedule, FilterState, ExamStatus } from '@/lib/types';
+import FilterBar from '@/components/FilterBar';
+import Navbar from '@/components/Navbar';
+import ExamPagination from '@/components/ExamPagination';
 import { sampleExamSchedules } from '@/lib/data';
+import { ExamSchedule, FilterState, ExamStatus } from '@/lib/types';
+
+const ITEMS_PER_PAGE = 10;
 
 const Index = () => {
-  const { toast } = useToast();
-  const [examSchedules, setExamSchedules] = useState<ExamSchedule[]>([]);
+  const [exams, setExams] = useState<ExamSchedule[]>(sampleExamSchedules);
   const [filteredExams, setFilteredExams] = useState<ExamSchedule[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<FilterState>({
+    studentName: '',
+    module: '',
+    pcNumber: '',
+    examDate: null,
+    examTime: '',
+    status: 'all'
+  });
   
-  // Initialize with today's data
+  // Apply filters to exams
   useEffect(() => {
-    // In a real app, this would be a fetch request to your API
-    setExamSchedules(sampleExamSchedules);
-    
-    // Initially show today's exams by default
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todaysExams = sampleExamSchedules.filter(exam => 
-      isSameDay(exam.examDate, today)
-    );
-    
-    setFilteredExams(todaysExams);
-  }, []);
+    let result = [...exams];
 
-  const handleFilter = (filters: FilterState) => {
-    let filtered = [...examSchedules];
-    
-    // Apply filters if they are set
     if (filters.studentName) {
-      filtered = filtered.filter(exam => 
+      result = result.filter(exam => 
         exam.studentName.toLowerCase().includes(filters.studentName.toLowerCase())
       );
     }
     
     if (filters.module) {
-      filtered = filtered.filter(exam => 
+      result = result.filter(exam => 
         exam.module.toLowerCase().includes(filters.module.toLowerCase())
       );
     }
     
-    // Handle the "all" value for pcNumber
-    if (filters.pcNumber && filters.pcNumber !== 'all') {
-      filtered = filtered.filter(exam => 
-        exam.pcNumber === parseInt(filters.pcNumber)
+    if (filters.pcNumber) {
+      result = result.filter(exam => 
+        exam.pcNumber === Number(filters.pcNumber)
       );
     }
     
     if (filters.examDate) {
-      filtered = filtered.filter(exam => 
-        isSameDay(exam.examDate, filters.examDate as Date)
+      result = result.filter(exam => 
+        format(exam.examDate, 'yyyy-MM-dd') === format(filters.examDate, 'yyyy-MM-dd')
       );
     }
     
-    // Handle the "all" value for examTime
-    if (filters.examTime && filters.examTime !== 'all') {
-      filtered = filtered.filter(exam => 
+    if (filters.examTime) {
+      result = result.filter(exam => 
         exam.examTime === filters.examTime
       );
     }
     
-    // Handle the "all" value for status - updated to fix type error
-    if (filters.status && filters.status !== 'all') {
-      filtered = filtered.filter(exam => 
+    if (filters.status !== 'all') {
+      result = result.filter(exam => 
         exam.status === filters.status as ExamStatus
       );
     }
     
-    setFilteredExams(filtered);
+    setFilteredExams(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [filters, exams]);
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
+  
+  // Get current page items
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredExams.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   };
 
-  const handleExamUpdate = (id: string, updatedExam: Partial<ExamSchedule>) => {
-    // Update the exam in the state
-    const updatedExams = examSchedules.map(exam => 
+  // Handle status update
+  const handleUpdateExam = (id: string, updatedExam: Partial<ExamSchedule>) => {
+    const updatedExams = exams.map(exam => 
       exam.id === id ? { ...exam, ...updatedExam } : exam
     );
     
-    setExamSchedules(updatedExams);
+    setExams(updatedExams);
     
-    // Also update the filtered list
-    const updatedFiltered = filteredExams.map(exam => 
-      exam.id === id ? { ...exam, ...updatedExam } : exam
-    );
-    
-    setFilteredExams(updatedFiltered);
-    
-    // Notify the user
     toast({
-      title: "Prova atualizada",
-      description: "As informações da prova foram atualizadas com sucesso.",
+      title: "Atualização realizada",
+      description: "Os dados da prova foram atualizados com sucesso.",
     });
   };
-
-  const handleExamDelete = (id: string) => {
-    // Remove the exam from the state
-    const remainingExams = examSchedules.filter(exam => exam.id !== id);
-    setExamSchedules(remainingExams);
+  
+  // Handle delete
+  const handleDeleteExam = (id: string) => {
+    const updatedExams = exams.filter(exam => exam.id !== id);
+    setExams(updatedExams);
     
-    // Also remove from filtered list
-    const remainingFiltered = filteredExams.filter(exam => exam.id !== id);
-    setFilteredExams(remainingFiltered);
-    
-    // Notify the user
     toast({
       title: "Prova excluída",
-      description: "A prova foi excluída com sucesso.",
+      description: "O agendamento da prova foi excluído com sucesso.",
+      variant: "destructive",
     });
+  };
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Navbar />
-      
-      <main className="container pt-24 pb-10 px-4 sm:px-6">
-        <div className="mb-8 animate-fade-up">
-          <h1 className="text-3xl font-bold text-navy mb-2">Agendamento de Provas</h1>
-          <p className="text-gray-600">
-            Gerencie os agendamentos de provas dos alunos. Use os filtros abaixo para encontrar agendamentos específicos.
-          </p>
+      <div className="container mx-auto px-4 py-24">
+        <h1 className="text-3xl font-bold text-center mb-8 text-navy">Agendamentos de Provas</h1>
+        
+        <div className="mb-6">
+          <FilterBar 
+            filters={filters}
+            setFilters={setFilters}
+          />
+          
+          <div className="mt-4 flex justify-center">
+            <button
+              className="bg-navy text-white px-4 py-2 rounded-md mr-4 hover:bg-opacity-90 transition-colors"
+              onClick={() => {
+                const today = new Date();
+                setFilters({
+                  ...filters,
+                  examDate: today
+                });
+              }}
+            >
+              Filtrar
+            </button>
+            <button
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+              onClick={() => {
+                setFilters({
+                  studentName: '',
+                  module: '',
+                  pcNumber: '',
+                  examDate: null,
+                  examTime: '',
+                  status: 'all'
+                });
+              }}
+            >
+              Limpar Filtros
+            </button>
+          </div>
         </div>
         
-        <FilterBar onFilter={handleFilter} />
-        
         <ScheduleTable 
-          exams={filteredExams}
-          onUpdate={handleExamUpdate}
-          onDelete={handleExamDelete}
+          exams={getCurrentPageItems()} 
+          onUpdate={handleUpdateExam}
+          onDelete={handleDeleteExam}
         />
-      </main>
+        
+        <ExamPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </div>
   );
 };
