@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import FilterBar from '@/components/FilterBar';
 import ScheduleTable from '@/components/ScheduleTable';
-import { ExamSchedule, FilterState } from '@/lib/types';
+import { ExamSchedule, FilterState, ExamStatus } from '@/lib/types';
 import { sampleExamSchedules } from '@/lib/data';
 
 const Index = () => {
@@ -65,10 +65,10 @@ const Index = () => {
       );
     }
     
-    // Handle the "all" value for status
+    // Handle the "all" value for status - updated to fix type error
     if (filters.status && filters.status !== 'all') {
       filtered = filtered.filter(exam => 
-        exam.status === filters.status
+        exam.status === filters.status as ExamStatus
       );
     }
     

@@ -20,5 +20,5 @@ export type FilterState = {
   pcNumber: string;
   examDate: Date | null;
   examTime: string;
-  status: ExamStatus | '';
+  status: string; // Changed from ExamStatus | '' to string to allow "all" value
 }
