@@ -1,8 +1,13 @@
 
 import React from 'react';
 import { CalendarDays } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const isSchedule = location.pathname === '/schedule';
+  
   return (
     <nav className="fixed top-0 left-0 right-0 bg-navy text-white shadow-md h-16 z-50 animate-fade-in">
       <div className="container h-full mx-auto px-4 flex items-center justify-between">
@@ -13,12 +18,24 @@ const Navbar: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-2">
-          <button className="bg-gold text-navy font-semibold px-4 py-2 rounded-md transition-all duration-200 hover:opacity-90 text-sm">
-            Página Inicial
-          </button>
-          <button className="bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-md transition-all duration-200 text-sm">
-            Agendar Nova Prova
-          </button>
+          <Link to="/">
+            <button className={`px-4 py-2 rounded-md transition-all duration-200 text-sm ${
+              isHome 
+                ? 'bg-gold text-navy font-semibold hover:opacity-90' 
+                : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
+            }`}>
+              Página Inicial
+            </button>
+          </Link>
+          <Link to="/schedule">
+            <button className={`px-4 py-2 rounded-md transition-all duration-200 text-sm ${
+              isSchedule 
+                ? 'bg-gold text-navy font-semibold hover:opacity-90' 
+                : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
+            }`}>
+              Agendar Nova Prova
+            </button>
+          </Link>
         </div>
       </div>
     </nav>
