@@ -41,7 +41,7 @@ const Index = () => {
       );
     }
     
-    if (filters.pcNumber) {
+    if (filters.pcNumber && filters.pcNumber !== 'all') {
       result = result.filter(exam => 
         exam.pcNumber === Number(filters.pcNumber)
       );
@@ -53,7 +53,7 @@ const Index = () => {
       );
     }
     
-    if (filters.examTime) {
+    if (filters.examTime && filters.examTime !== 'all') {
       result = result.filter(exam => 
         exam.examTime === filters.examTime
       );

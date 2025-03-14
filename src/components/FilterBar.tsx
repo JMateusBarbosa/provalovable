@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,7 +91,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
                 <SelectValue placeholder="Selecione o PC" />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-72">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {Array.from({ length: 14 }, (_, i) => i + 1).map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     PC {num}
@@ -147,7 +148,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
                 <SelectValue placeholder="Selecione o horário" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {["7:30", "8:30", "9:30", "14:00", "15:00", "16:00", "17:00"].map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
@@ -179,17 +180,17 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
           </div>
         </div>
         
-        {/* Center the action buttons */}
+        {/* Center the action buttons properly within the blue filter box */}
         <div className="flex justify-center mt-4 space-x-4">
           <Button 
             type="button" 
             className="button-primary"
             onClick={() => {
-              // Keep the filter logic, but prevent form submission
+              // Apply filters with current date if needed
               const today = new Date();
               setFilters({
                 ...filters,
-                examDate: today
+                examDate: filters.examDate || today
               });
             }}
           >
