@@ -46,6 +46,23 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Add subtle background pattern for visual interest */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-image: 
+      radial-gradient(#f0f8ff 1px, transparent 1px), 
+      radial-gradient(#f0f8ff 1px, transparent 1px);
+    background-position: 0 0, 25px 25px;
+    background-size: 50px 50px;
+    opacity: 0.3;
+  }
 }
 
 @layer components {
@@ -55,7 +72,7 @@
   
   .filter-input {
     @apply h-10 rounded-md border border-input bg-white px-3 py-2 text-sm transition-all duration-200 
-    focus:outline-none focus:ring-2 focus:ring-navy focus:border-navy;
+    focus:outline-none focus:ring-2 focus:ring-navy focus:border-navy shadow-sm;
   }
   
   .table-row-hover {
@@ -98,7 +115,7 @@
   }
   
   .status-badge {
-    @apply px-3 py-1 rounded-full text-xs font-medium text-white;
+    @apply px-3 py-1 rounded-full text-xs font-medium text-white inline-block min-w-20;
   }
   
   .status-pending {
@@ -111,5 +128,19 @@
   
   .status-failed {
     @apply bg-failed;
+  }
+
+  /* Zebra striping for table rows */
+  .table-container tbody tr:nth-child(odd) {
+    @apply bg-white;
+  }
+  
+  .table-container tbody tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+  
+  /* Today's row should override zebra striping */
+  .table-container tbody tr.bg-today-row {
+    @apply bg-today-row;
   }
 }

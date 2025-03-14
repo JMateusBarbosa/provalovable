@@ -45,7 +45,8 @@ const Index = () => {
       );
     }
     
-    if (filters.pcNumber) {
+    // Handle the "all" value for pcNumber
+    if (filters.pcNumber && filters.pcNumber !== 'all') {
       filtered = filtered.filter(exam => 
         exam.pcNumber === parseInt(filters.pcNumber)
       );
@@ -57,13 +58,15 @@ const Index = () => {
       );
     }
     
-    if (filters.examTime) {
+    // Handle the "all" value for examTime
+    if (filters.examTime && filters.examTime !== 'all') {
       filtered = filtered.filter(exam => 
         exam.examTime === filters.examTime
       );
     }
     
-    if (filters.status) {
+    // Handle the "all" value for status
+    if (filters.status && filters.status !== 'all') {
       filtered = filtered.filter(exam => 
         exam.status === filters.status
       );

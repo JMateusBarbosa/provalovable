@@ -106,7 +106,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
                 <SelectValue placeholder="Selecione o PC" />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-72">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {pcNumbers.map((num) => (
                   <SelectItem key={num} value={num}>
                     PC {num}
@@ -163,7 +163,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
                 <SelectValue placeholder="Selecione o horário" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {timeSlots.map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
@@ -186,7 +186,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
                 <SelectValue placeholder="Selecione o estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Aprovado">Aprovado</SelectItem>
                 <SelectItem value="Reprovado">Reprovado</SelectItem>

@@ -13,10 +13,10 @@ const Navbar: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-2">
-          <button className="nav-link nav-link-active">
+          <button className="bg-gold text-navy font-semibold px-4 py-2 rounded-md transition-all duration-200 hover:opacity-90 text-sm">
             Página Inicial
           </button>
-          <button className="nav-link bg-white bg-opacity-10 hover:bg-opacity-20">
+          <button className="bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-md transition-all duration-200 text-sm">
             Agendar Nova Prova
           </button>
         </div>
