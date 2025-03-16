@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { Toaster } from '@/components/ui/toaster';
 import { toast } from '@/components/ui/use-toast';
 import ScheduleTable from '@/components/ScheduleTable';
@@ -25,7 +25,7 @@ const Index = () => {
     status: 'all'
   });
   
-  // Apply filters to exams
+  // Apply filters to exams and sort by today's exams first
   useEffect(() => {
     let result = [...exams];
 
@@ -64,6 +64,21 @@ const Index = () => {
         exam.status === filters.status as ExamStatus
       );
     }
+    
+    // Sort exams with today's exams displayed first
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    result.sort((a, b) => {
+      const aIsToday = isSameDay(a.examDate, today);
+      const bIsToday = isSameDay(b.examDate, today);
+      
+      if (aIsToday && !bIsToday) return -1;
+      if (!aIsToday && bIsToday) return 1;
+      
+      // If both are today or both are not today, sort by date
+      return a.examDate.getTime() - b.examDate.getTime();
+    });
     
     setFilteredExams(result);
     setCurrentPage(1); // Reset to first page when filters change
