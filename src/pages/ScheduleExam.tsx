@@ -96,6 +96,15 @@ const ScheduleExam = () => {
       return;
     }
     
+    if (!schoolId) {
+      toast({
+        title: "Erro",
+        description: "ID da escola não encontrado. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSaving(true);
     
     try {
@@ -106,10 +115,11 @@ const ScheduleExam = () => {
         examDate,
         examTime,
         examType,
-        status: "Pendente",
+        status: "Pendente" as ExamStatus,
+        schoolId: schoolId,
       };
       
-      const data = await examApi.createExam(examData, schoolId!);
+      const data = await examApi.createExam(examData, schoolId);
       
       toast({
         title: "Prova agendada",
