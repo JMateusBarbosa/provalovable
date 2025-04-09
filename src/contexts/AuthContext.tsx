@@ -8,7 +8,7 @@ import { toast } from '@/components/ui/use-toast';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   schoolId: string | null;
 }
@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: userData.id,
               email: userData.email,
               name: userData.name,
-              schoolId: userData.school_id
+              schoolId: userData.school_id,
+              username: userData.username
             });
           }
         }
@@ -79,7 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: userData.id,
             email: userData.email,
             name: userData.name,
-            schoolId: userData.school_id
+            schoolId: userData.school_id,
+            username: userData.username
           });
         }
       } else if (event === 'SIGNED_OUT') {
@@ -93,15 +95,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [navigate]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      // Primeiro, procurar o usuário pelo nome de usuário para obter o email
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('username', username)
+        .single();
+      
+      if (userError || !userData) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Nome de usuário ou senha inválidos",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Agora fazer login com o email encontrado
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email: userData.email, 
+        password 
+      });
       
       if (error) {
         toast({
           title: "Erro de autenticação",
-          description: error.message,
+          description: "Nome de usuário ou senha inválidos",
           variant: "destructive",
         });
         return;

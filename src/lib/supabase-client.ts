@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { ExamSchedule } from './types';
 import { toSupabaseExam, fromSupabaseExam } from './supabase-schema';
@@ -39,6 +38,19 @@ export const authApi = {
     if (userError) throw userError;
     
     return userData;
+  },
+  
+  // Nova função para buscar usuário por username
+  getUserByUsername: async (username: string) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
   }
 };
 

@@ -7,13 +7,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
-// Schema de validação
+// Schema de validação atualizado para usar username em vez de email
 const loginSchema = z.object({
-  email: z.string().email('Digite um email válido'),
+  username: z.string().min(3, 'O nome de usuário deve ter pelo menos 3 caracteres'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
 });
 
@@ -25,13 +24,13 @@ const Login = () => {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: ''
     }
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    await login(data.email, data.password);
+    await login(data.username, data.password);
   };
 
   return (
@@ -43,7 +42,7 @@ const Login = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-center text-navy">Sistema de Agendamento de Provas</CardTitle>
           <CardDescription className="text-center">
-            Entre com seu email e senha para acessar o sistema.
+            Entre com seu nome de usuário e senha para acessar o sistema.
           </CardDescription>
         </CardHeader>
         
@@ -52,14 +51,14 @@ const Login = () => {
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Nome de Usuário</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Digite seu email" 
-                        type="email"
+                        placeholder="Digite seu nome de usuário" 
+                        type="text"
                         disabled={loading}
                         {...field} 
                       />
