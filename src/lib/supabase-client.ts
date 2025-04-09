@@ -1,18 +1,4 @@
 
-// This file will be implemented when Supabase is connected
-// Below is a placeholder for the structure to implement
-
-/**
- * Instructions for Supabase Setup:
- * 
- * 1. Create a Supabase project at https://supabase.com
- * 2. Create the exam_schedules table using the SQL in supabase-schema.ts
- * 3. Install the Supabase client: npm install @supabase/supabase-js
- * 4. Configure your Supabase URL and public anon key below
- */
-
-
-
 import { createClient } from '@supabase/supabase-js';
 import { ExamSchedule } from './types';
 import { toSupabaseExam, fromSupabaseExam } from './supabase-schema';
@@ -21,15 +7,49 @@ import { toSupabaseExam, fromSupabaseExam } from './supabase-schema';
 const supabaseUrl = 'https://lndunjdjtxqnxbafedfx.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuZHVuamRqdHhxbnhiYWZlZGZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5Nzc1NzgsImV4cCI6MjA1NzU1MzU3OH0.maudsrhpJc1mMSMAEyFBIkZJIJ2I0mVeTc7Q6FclcRo';
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Autenticação
+export const authApi = {
+  // Gerenciar usuários no sistema
+  getUsers: async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*');
+    
+    if (error) throw error;
+    
+    return data;
+  },
+  
+  getCurrentUser: async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) throw error;
+    
+    if (!user) return null;
+    
+    // Buscar informações adicionais do usuário
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_id', user.id)
+      .single();
+    
+    if (userError) throw userError;
+    
+    return userData;
+  }
+};
 
 // Exam API functions
 export const examApi = {
   // Get all exams with optional filters
-  getExams: async (): Promise<ExamSchedule[]> => {
+  getExams: async (schoolId: string): Promise<ExamSchedule[]> => {
     const { data, error } = await supabase
       .from('exam_schedules')
       .select('*')
+      .eq('school_id', schoolId)
       .order('exam_date', { ascending: true });
     
     console.log('Dados retornados do Supabase:', data);
@@ -53,10 +73,10 @@ export const examApi = {
   },
   
   // Create a new exam
-  createExam: async (exam: Omit<ExamSchedule, 'id'>): Promise<ExamSchedule> => {
+  createExam: async (exam: Omit<ExamSchedule, 'id'>, schoolId: string): Promise<ExamSchedule> => {
     const { data, error } = await supabase
       .from('exam_schedules')
-      .insert(toSupabaseExam(exam))
+      .insert(toSupabaseExam(exam, schoolId))
       .select()
       .single();
     
@@ -77,6 +97,7 @@ export const examApi = {
     if (exam.examTime !== undefined) updateData.exam_time = exam.examTime;
     if (exam.examType !== undefined) updateData.exam_type = exam.examType;
     if (exam.status !== undefined) updateData.status = exam.status;
+    // Não permitimos atualizar a escola
     
     const { data, error } = await supabase
       .from('exam_schedules')
@@ -101,3 +122,27 @@ export const examApi = {
   }
 };
 
+// Gerenciamento de escolas
+export const schoolApi = {
+  getSchools: async () => {
+    const { data, error } = await supabase
+      .from('schools')
+      .select('*');
+    
+    if (error) throw error;
+    
+    return data;
+  },
+  
+  getSchoolById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('schools')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  }
+};

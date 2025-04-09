@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { examApi } from '@/lib/supabase-client';
 
@@ -33,10 +32,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ExamStatus, ExamType } from '@/lib/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ScheduleExam = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { schoolId } = useAuth();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -82,6 +83,7 @@ const ScheduleExam = () => {
       examTime: false,
     });
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,30 +99,30 @@ const ScheduleExam = () => {
     setIsSaving(true);
     
     try {
-      // Cria o novo exame utilizando a API do Supabase definida em examApi
-      const newExam = await examApi.createExam({
+      const examData = {
         studentName,
         module,
-        pcNumber: Number(pcNumber), // Certifique-se de enviar um número se for esse o tipo
-        examDate, // A função toSupabaseExam fará a conversão para ISO
+        pcNumber: parseInt(pcNumber),
+        examDate,
         examTime,
         examType,
-        status: "Pendente", // Ou o status padrão que desejar
-      });
+        status: "Pendente",
+      };
+      
+      const data = await examApi.createExam(examData, schoolId!);
       
       toast({
-        title: "Agendamento realizado",
-        description: "A prova foi agendada com sucesso!",
-        variant: "default", 
+        title: "Prova agendada",
+        description: `Agendamento para ${studentName} realizado com sucesso.`,
       });
       
       setIsSaving(false);
       setShowConfirmation(true);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao agendar prova:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao agendar a prova.",
+        description: "Não foi possível agendar a prova. Tente novamente.",
         variant: "destructive",
       });
       setIsSaving(false);
@@ -129,7 +131,7 @@ const ScheduleExam = () => {
 
   const handleConfirmationClose = () => {
     setShowConfirmation(false);
-    //navigate('/');
+    navigate('/');
   };
 
   const handleCancel = () => {

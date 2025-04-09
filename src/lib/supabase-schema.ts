@@ -22,12 +22,16 @@ import { ExamSchedule } from './types';
  *   exam_time TEXT NOT NULL,
  *   exam_type TEXT NOT NULL,
  *   status TEXT NOT NULL,
+ *   school_id UUID REFERENCES schools(id) NOT NULL,
  *   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
  *   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
  * );
  * 
  * -- Create an index for faster date-based queries
  * CREATE INDEX idx_exam_date ON exam_schedules(exam_date);
+ * 
+ * -- Create an index for faster school-based queries
+ * CREATE INDEX idx_school_id ON exam_schedules(school_id);
  * 
  * -- Create a trigger to update the updated_at timestamp
  * CREATE OR REPLACE FUNCTION update_modified_column()
@@ -50,26 +54,31 @@ import { ExamSchedule } from './types';
  * 1. GET /api/exams
  *    - Returns all exam schedules
  *    - Optional query parameters for filtering
+ *    - Requires authentication and filters by school_id of authenticated user
  * 
  * 2. GET /api/exams/:id
  *    - Returns a specific exam by ID
+ *    - Validates that the user has permission to access this exam
  * 
  * 3. POST /api/exams
  *    - Creates a new exam schedule
  *    - Requires all fields except ID
+ *    - Automatically adds the school_id from the authenticated user
  * 
  * 4. PUT /api/exams/:id
  *    - Updates an existing exam schedule
  *    - Partial updates allowed
+ *    - Validates that the user has permission to update this exam
  * 
  * 5. DELETE /api/exams/:id
  *    - Deletes an exam schedule
+ *    - Validates that the user has permission to delete this exam
  */
 
 /**
  * Function to convert application ExamSchedule to Supabase format
  */
-export const toSupabaseExam = (exam: Omit<ExamSchedule, 'id'>): Record<string, any> => {
+export const toSupabaseExam = (exam: Omit<ExamSchedule, 'id'>, schoolId: string): Record<string, any> => {
   return {
     student_name: exam.studentName,
     module: exam.module,
@@ -77,7 +86,8 @@ export const toSupabaseExam = (exam: Omit<ExamSchedule, 'id'>): Record<string, a
     exam_date: exam.examDate.toISOString(),
     exam_time: exam.examTime,
     exam_type: exam.examType,
-    status: exam.status
+    status: exam.status,
+    school_id: schoolId
   };
 };
 
@@ -93,6 +103,7 @@ export const fromSupabaseExam = (record: Record<string, any>): ExamSchedule => {
     examDate: new Date(record.exam_date),
     examTime: record.exam_time,
     examType: record.exam_type,
-    status: record.status
+    status: record.status,
+    schoolId: record.school_id
   };
 };

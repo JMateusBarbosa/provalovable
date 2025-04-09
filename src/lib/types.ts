@@ -12,6 +12,7 @@ export type ExamSchedule = {
   examTime: string;
   examType: ExamType;
   status: ExamStatus;
+  schoolId: string;  // Nova propriedade
 }
 
 export type FilterState = {
@@ -21,4 +22,12 @@ export type FilterState = {
   examDate: Date | null;
   examTime: string;
   status: string; // Changed from ExamStatus | '' to string to allow "all" value
+}
+
+// Adicionando tipos para autenticação
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  schoolId: string;
 }
