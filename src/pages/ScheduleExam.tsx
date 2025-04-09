@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+import { examApi } from '@/lib/supabase-client';
+
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -80,8 +82,7 @@ const ScheduleExam = () => {
       examTime: false,
     });
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -95,16 +96,40 @@ const ScheduleExam = () => {
     
     setIsSaving(true);
     
-    // Simulate saving delay
-    setTimeout(() => {
+    try {
+      // Cria o novo exame utilizando a API do Supabase definida em examApi
+      const newExam = await examApi.createExam({
+        studentName,
+        module,
+        pcNumber: Number(pcNumber), // Certifique-se de enviar um número se for esse o tipo
+        examDate, // A função toSupabaseExam fará a conversão para ISO
+        examTime,
+        examType,
+        status: "Pendente", // Ou o status padrão que desejar
+      });
+      
+      toast({
+        title: "Agendamento realizado",
+        description: "A prova foi agendada com sucesso!",
+        variant: "default", 
+      });
+      
       setIsSaving(false);
       setShowConfirmation(true);
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao agendar a prova.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+    }
   };
 
   const handleConfirmationClose = () => {
     setShowConfirmation(false);
-    navigate('/');
+    //navigate('/');
   };
 
   const handleCancel = () => {
@@ -234,7 +259,7 @@ const ScheduleExam = () => {
                   <SelectValue placeholder="Selecione o horário" />
                 </SelectTrigger>
                 <SelectContent>
-                  {['7:30', '8:30', '9:30', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map((time) => (
+                  {['7:30', '8:30', '9:30', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
                     <SelectItem key={time} value={time}>
                       {time}
                     </SelectItem>
