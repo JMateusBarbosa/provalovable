@@ -8,8 +8,11 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Importamos as funções de auth-api.ts
+import { authApi } from './auth-api';
+
 // Autenticação
-export const authApi = {
+export const userApi = {
   // Gerenciar usuários no sistema
   getUsers: async () => {
     const { data, error } = await supabase
@@ -51,7 +54,11 @@ export const authApi = {
     if (error) throw error;
     
     return data;
-  }
+  },
+  
+  // Re-exportamos as funções de authApi
+  registerUser: authApi.registerUser,
+  checkUsernameExists: authApi.checkUsernameExists
 };
 
 // Exam API functions

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase-client';
 import { User } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
+import { userApi } from '@/lib/supabase-client';
 
 interface AuthContextType {
   user: User | null;
