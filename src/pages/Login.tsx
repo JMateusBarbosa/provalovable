@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
-// Schema de validação atualizado para usar username em vez de email
+// Schema de validação para login com username
 const loginSchema = z.object({
   username: z.string().min(3, 'O nome de usuário deve ter pelo menos 3 caracteres'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
