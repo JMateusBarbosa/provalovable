@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -21,6 +21,7 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   // Mostrar indicador de carregamento enquanto verifica autenticação
   if (loading) {
@@ -33,7 +34,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Redirecionar para login se não autenticado
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Adicionar estado para armazenar a rota de origem para possível redirecionamento após login
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   // Renderizar as rotas protegidas

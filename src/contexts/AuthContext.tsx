@@ -168,15 +168,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Função de logout
+   * Função de logout otimizada
    * 
    * Encerra a sessão do usuário e redireciona para a página de login
+   * Implementa uma abordagem otimizada para reduzir o tempo de resposta
    */
   const logout = async () => {
     try {
-      setLoading(true);
-      await supabase.auth.signOut();
+      // Primeiro, definimos o estado do usuário como null imediatamente para resposta rápida da UI
+      setUser(null);
+      
+      // Em seguida, redireciona para a página de login antes de completar o processo de signOut
       navigate('/login');
+      
+      // Por fim, fazemos o signOut no Supabase em segundo plano
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Erro ao sair:', error);
       toast({
