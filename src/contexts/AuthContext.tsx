@@ -6,6 +6,11 @@ import { User } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
 import { userApi } from '@/lib/supabase-client';
 
+/**
+ * Interface que define o formato do contexto de autenticação
+ * Contém o usuário atual, estado de carregamento, funções de login/logout
+ * e o ID da escola do usuário logado
+ */
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -14,8 +19,15 @@ interface AuthContextType {
   schoolId: string | null;
 }
 
+// Criação do contexto de autenticação
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Provider de Autenticação
+ * 
+ * Componente que gerencia o estado de autenticação do usuário no sistema
+ * Verifica a autenticação ao carregar a aplicação e fornece funções de login/logout
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,11 +103,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // Limpar o listener ao desmontar o componente
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, [navigate]);
 
+  /**
+   * Função de login
+   * 
+   * Processo:
+   * 1. Busca o usuário pelo nome de usuário para obter o email
+   * 2. Faz login com o email e senha usando Supabase Auth
+   * 
+   * @param username Nome de usuário
+   * @param password Senha
+   */
   const login = async (username: string, password: string) => {
     try {
       setLoading(true);
@@ -144,6 +167,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Função de logout
+   * 
+   * Encerra a sessão do usuário e redireciona para a página de login
+   */
   const logout = async () => {
     try {
       setLoading(true);
@@ -168,6 +196,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+/**
+ * Hook para acessar o contexto de autenticação
+ * Deve ser usado dentro de um AuthProvider
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

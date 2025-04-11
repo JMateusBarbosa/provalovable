@@ -10,17 +10,30 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
-// Schema de validação para login com username
+/**
+ * Schema de validação para login com username
+ * - Username: mínimo de 3 caracteres
+ * - Senha: mínimo de 6 caracteres
+ */
 const loginSchema = z.object({
   username: z.string().min(3, 'O nome de usuário deve ter pelo menos 3 caracteres'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
 });
 
+// Tipo baseado no schema de validação
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/**
+ * Componente de Login
+ * 
+ * Responsável pela autenticação do usuário usando nome de usuário e senha.
+ * Utiliza react-hook-form para gerenciamento do formulário e zod para validação.
+ */
 const Login = () => {
+  // Hook de autenticação que fornece a função de login e estado de carregamento
   const { login, loading } = useAuth();
   
+  // Configuração do formulário com validação
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -29,6 +42,10 @@ const Login = () => {
     }
   });
 
+  /**
+   * Função que processa o envio do formulário
+   * Chama a função de login do AuthContext com o username e senha
+   */
   const onSubmit = async (data: LoginFormValues) => {
     await login(data.username, data.password);
   };
@@ -49,6 +66,7 @@ const Login = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
+              {/* Campo de nome de usuário */}
               <FormField
                 control={form.control}
                 name="username"
@@ -68,6 +86,7 @@ const Login = () => {
                 )}
               />
               
+              {/* Campo de senha */}
               <FormField
                 control={form.control}
                 name="password"
