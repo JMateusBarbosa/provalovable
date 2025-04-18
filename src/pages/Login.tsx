@@ -1,11 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -31,7 +30,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
  * Utiliza react-hook-form para gerenciamento do formulário e zod para validação.
  */
 const Login = () => {
-  // Hook de autenticação que fornece a função de login e estado de carregamento
   const { login, loading, user, authChecked } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +51,11 @@ const Login = () => {
       password: ''
     }
   });
+
+  // Function to navigate back to the home page
+  const handleGoBack = () => {
+    navigate('/');
+  };
 
   /**
    * Função que processa o envio do formulário
@@ -78,7 +81,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-lg animate-fade-up">
+      <Card className="w-full max-w-md shadow-lg animate-fade-up relative">
+        {/* Back button positioned at the top-left of the card */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-4 left-4"
+          onClick={handleGoBack}
+        >
+          <ArrowLeft className="h-6 w-6 text-navy" />
+        </Button>
+
         <CardHeader className="space-y-1 flex flex-col items-center">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-navy mb-4">
             <CalendarDays size={32} className="text-gold" />
