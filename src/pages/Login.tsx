@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,31 +81,33 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md shadow-lg animate-fade-up relative">
-        {/* Back button positioned at the top-left of the card */}
+        {/* Back button positioned responsivamente */}
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute top-4 left-4"
+          className="absolute top-4 left-4 z-10"
           onClick={handleGoBack}
         >
-          <ArrowLeft className="h-6 w-6 text-navy" />
+          <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-navy" />
         </Button>
 
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-navy mb-4">
-            <CalendarDays size={32} className="text-gold" />
+        <CardHeader className="space-y-1 flex flex-col items-center pt-12 md:pt-8">
+          <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-navy mb-4">
+            <CalendarDays size={28} className="text-gold" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center text-navy">Sistema de Agendamento de Provas</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-xl md:text-2xl font-bold text-center text-navy">
+            Sistema de Agendamento de Provas
+          </CardTitle>
+          <CardDescription className="text-center text-sm md:text-base">
             Entre com seu nome de usuário e senha para acessar o sistema.
           </CardDescription>
         </CardHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 md:px-6">
               {/* Campo de nome de usuário */}
               <FormField
                 control={form.control}
@@ -119,6 +120,7 @@ const Login = () => {
                         placeholder="Digite seu nome de usuário" 
                         type="text"
                         disabled={loading}
+                        className="h-10 md:h-11"
                         {...field} 
                       />
                     </FormControl>
@@ -139,6 +141,7 @@ const Login = () => {
                         placeholder="Digite sua senha" 
                         type="password"
                         disabled={loading}
+                        className="h-10 md:h-11"
                         {...field} 
                       />
                     </FormControl>
@@ -148,10 +151,10 @@ const Login = () => {
               />
             </CardContent>
             
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-4 px-4 md:px-6 pb-6">
               <Button 
                 type="submit" 
-                className="w-full bg-navy hover:bg-navy/90" 
+                className="w-full bg-navy hover:bg-navy/90 h-10 md:h-11" 
                 disabled={loading}
               >
                 {loading ? "Entrando..." : "Entrar"}
