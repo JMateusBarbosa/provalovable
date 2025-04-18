@@ -11,7 +11,14 @@ import ScheduleExam from "./pages/ScheduleExam";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,7 +28,10 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Rota de Login - acessível para usuários não autenticados */}
             <Route path="/login" element={<Login />} />
+            
+            {/* Rotas protegidas que requerem autenticação */}
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
@@ -32,10 +42,12 @@ const App = () => (
                 <ScheduleExam />
               </ProtectedRoute>
             } />
-            {/* Rota para redirecionar qualquer URL inválida para a página 404 */}
+            
+            {/* Rota para a página 404 */}
             <Route path="/404" element={<NotFound />} />
-            {/* Redirecionar para home ou 404 dependendo da rota */}
-            <Route path="*" element={<Navigate to="/404" replace />} />
+            
+            {/* Redirecionamento de qualquer outra URL para página inicial */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
