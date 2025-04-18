@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import ScheduleExam from "./pages/ScheduleExam";
 import Login from "./pages/Login";
@@ -28,11 +29,14 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Rota de Login - acessível para usuários não autenticados */}
+            {/* Landing Page - accessible to everyone */}
+            <Route path="/" element={<Landing />} />
+            
+            {/* Login Route */}
             <Route path="/login" element={<Login />} />
             
-            {/* Rotas protegidas que requerem autenticação */}
-            <Route path="/" element={
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Index />
               </ProtectedRoute>
@@ -43,11 +47,11 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Rota para a página 404 */}
+            {/* Not Found Route */}
             <Route path="/404" element={<NotFound />} />
             
-            {/* Redirecionamento de qualquer outra URL para página inicial */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Redirect any other routes to 404 */}
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
