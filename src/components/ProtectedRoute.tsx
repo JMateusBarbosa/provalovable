@@ -24,6 +24,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Log the authentication state to help with debugging
+  useEffect(() => {
+    console.log('ProtectedRoute auth state:', { user, loading, authChecked });
+  }, [user, loading, authChecked]);
+
   // Limitar o tempo de carregamento para evitar loops infinitos
   useEffect(() => {
     const timeoutId = setTimeout(() => {

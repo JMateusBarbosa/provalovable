@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,14 +35,14 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Redirecionar para a página inicial se já estiver autenticado
+  // Redirecionar para o dashboard se já estiver autenticado
   useEffect(() => {
     // Só redireciona quando a verificação de autenticação já foi concluída e o usuário existe
     if (authChecked && user) {
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      // Alterado para redirecionar para o dashboard em vez de usar o location.state
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, authChecked, navigate, location]);
+  }, [user, authChecked, navigate]);
   
   // Configuração do formulário com validação
   const form = useForm<LoginFormValues>({
@@ -63,6 +64,7 @@ const Login = () => {
    */
   const onSubmit = async (data: LoginFormValues) => {
     try {
+      // O redirect para o dashboard agora é feito dentro da função login
       await login(data.username, data.password);
     } catch (error) {
       console.error('Erro ao realizar login:', error);
