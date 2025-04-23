@@ -1,20 +1,26 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, CheckCircle, Users, School } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Footer from '@/components/layout/Footer';
+
+const logoUrl = "/lovable-uploads/5ae97c43-20ff-44f9-936a-c42948148335.png";
 
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Hero Section - Updated padding and text sizes for mobile */}
+      {/* Hero Section - Updated to use logo */}
       <header className="bg-navy text-white">
         <div className="container mx-auto px-4 py-8 md:py-16">
           <div className="flex flex-col items-center text-center">
-            <CalendarDays className="h-12 w-12 md:h-16 md:w-16 text-gold mb-4 md:mb-6" />
+            <img
+              src={logoUrl}
+              alt="Logo Indústria do Saber"
+              className="mb-4 md:mb-6 w-28 h-28 md:w-40 md:h-40 object-contain rounded bg-white"
+              style={{ background: 'white', padding: '0.5rem' }}
+            />
             <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
               Sistema de Agendamento de Provas
             </h1>
@@ -40,17 +46,17 @@ const Landing = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <FeatureCard 
-              icon={<CalendarDays className="h-8 w-8 text-gold" />}
+              icon={<img src={logoUrl} className="h-8 w-8 object-contain" alt="Logo" />}
               title="Agendamento Simplificado"
               description="Interface intuitiva para agendar provas de forma rápida e eficiente."
             />
             <FeatureCard 
-              icon={<Users className="h-8 w-8 text-gold" />}
+              icon={<img src={logoUrl} className="h-8 w-8 object-contain" alt="Logo" />}
               title="Gestão de Alunos"
               description="Acompanhamento completo do histórico de provas de cada aluno."
             />
             <FeatureCard 
-              icon={<School className="h-8 w-8 text-gold" />}
+              icon={<img src={logoUrl} className="h-8 w-8 object-contain" alt="Logo" />}
               title="Múltiplas Unidades"
               description="Suporte para gerenciamento de várias unidades educacionais."
             />
@@ -83,3 +89,4 @@ const FeatureCard = ({
 );
 
 export default Landing;
+

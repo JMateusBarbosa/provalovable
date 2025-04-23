@@ -1,14 +1,17 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarDays, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+
+const logoUrl = "/lovable-uploads/5ae97c43-20ff-44f9-936a-c42948148335.png";
 
 /**
  * Schema de validação para login com username
@@ -94,9 +97,12 @@ const Login = () => {
         </Button>
 
         <CardHeader className="space-y-1 flex flex-col items-center pt-12 md:pt-8">
-          <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-navy mb-4">
-            <CalendarDays size={28} className="text-gold" />
-          </div>
+          <img
+            src={logoUrl}
+            alt="Logo Indústria do Saber"
+            className="w-20 h-20 md:w-24 md:h-24 rounded object-contain mb-4"
+            style={{ background: 'white', padding: '0.5rem' }}
+          />
           <CardTitle className="text-xl md:text-2xl font-bold text-center text-navy">
             Sistema de Agendamento de Provas
           </CardTitle>
