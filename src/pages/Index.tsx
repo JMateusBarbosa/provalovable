@@ -4,11 +4,11 @@ import { Toaster } from '@/components/ui/toaster';
 import { toast } from '@/components/ui/use-toast';
 import ScheduleTable from '@/components/ScheduleTable';
 import FilterBar from '@/components/FilterBar';
-import Navbar from '@/components/Navbar';
 import ExamPagination from '@/components/ExamPagination';
 import { examApi } from '@/lib/supabase-client';
 import { ExamSchedule, FilterState, ExamStatus } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
+import PageLayout from '@/components/layout/PageLayout';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -46,7 +46,6 @@ const Index = () => {
     loadExams();
   }, [schoolId]);
   
-  // Apply filters to exams and sort by today's exams first
   useEffect(() => {
     let result = [...exams];
 
@@ -88,7 +87,6 @@ const Index = () => {
       );
     }
     
-    // Sort exams with today's exams displayed first
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -99,30 +97,24 @@ const Index = () => {
       if (aIsToday && !bIsToday) return -1;
       if (!aIsToday && bIsToday) return 1;
       
-      // If both are today or both are not today, sort by date
       return a.examDate.getTime() - b.examDate.getTime();
     });
     
     setFilteredExams(result);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [filters, exams]);
   
-  // Calculate total pages
   const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
   
-  // Get current page items
   const getCurrentPageItems = () => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredExams.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   };
 
-  // Handle status update
   const handleUpdateExam = async (id: string, updatedExam: Partial<ExamSchedule>) => {
     try {
-      // Atualiza o exame no Supabase
       const updated = await examApi.updateExam(id, updatedExam);
   
-      // Atualiza o estado local
       const updatedExams = exams.map(exam => 
         exam.id === id ? { ...exam, ...updated } : exam
       );
@@ -142,14 +134,10 @@ const Index = () => {
     }
   };
   
-  
-  // Handle delete
   const handleDeleteExam = async (id: string) => {
     try {
-      // Exclui o exame no Supabase
       await examApi.deleteExam(id);
   
-      // Atualiza o estado local
       const updatedExams = exams.filter(exam => exam.id !== id);
       setExams(updatedExams);
   
@@ -168,41 +156,34 @@ const Index = () => {
     }
   };
   
-  
-  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <div className="container mx-auto px-4 py-24">
-        <h1 className="text-3xl font-bold text-center mb-8 text-navy">Provas Agendadas</h1>
-        
-        <div className="mb-6">
-          <FilterBar 
-            filters={filters}
-            setFilters={setFilters}
-          />
-        </div>
-        
-        <ScheduleTable 
-          exams={getCurrentPageItems()} 
-          onUpdate={handleUpdateExam}
-          onDelete={handleDeleteExam}
+    <PageLayout title="Provas Agendadas">
+      <div className="mb-6">
+        <FilterBar 
+          filters={filters}
+          setFilters={setFilters}
         />
-        
-        {filteredExams.length > ITEMS_PER_PAGE && (
-          <ExamPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        )}
       </div>
-    </div>
+      
+      <ScheduleTable 
+        exams={getCurrentPageItems()} 
+        onUpdate={handleUpdateExam}
+        onDelete={handleDeleteExam}
+      />
+      
+      {filteredExams.length > ITEMS_PER_PAGE && (
+        <ExamPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
+    </PageLayout>
   );
 };
 
