@@ -57,7 +57,7 @@ const ScheduleExam = () => {
   };
 
   const handleCancel = () => {
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (
