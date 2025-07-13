@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
-const logoUrl = "/lovable-uploads/5ae97c43-20ff-44f9-936a-c42948148335.png";
+const logoUrl = "/lovable-uploads/logo.png";
 
 /**
  * Schema de validação para login com username

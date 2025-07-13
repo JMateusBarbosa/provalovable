@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import Footer from '@/components/layout/Footer';
 
-const logoUrl = "/lovable-uploads/5ae97c43-20ff-44f9-936a-c42948148335.png";
+const logoUrl = "/lovable-uploads/logo.png";
 
 const Landing = () => {
   const navigate = useNavigate();
