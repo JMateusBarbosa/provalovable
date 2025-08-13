@@ -18,7 +18,7 @@ export const useAuthState = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let timeoutId: number | undefined;
+    
     
     const checkAuth = async () => {
       try {
@@ -52,8 +52,6 @@ export const useAuthState = () => {
           
           if (userError) {
             console.error('Erro ao buscar dados do usuário:', userError);
-            // Se houver erro ao buscar o usuário, fazemos logout silencioso
-            await supabase.auth.signOut();
             if (isMounted) {
               setUser(null);
               setLoading(false);
@@ -91,15 +89,6 @@ export const useAuthState = () => {
       }
     };
 
-    // Timeout de segurança mais curto
-    timeoutId = window.setTimeout(() => {
-      if (isMounted && loading && !authChecked) {
-        console.warn('Timeout de verificação de autenticação atingido');
-        setUser(null);
-        setLoading(false);
-        setAuthChecked(true);
-      }
-    }, 3000); // Reduzido para 3 segundos
 
     checkAuth();
     
@@ -136,7 +125,6 @@ export const useAuthState = () => {
         
         if (userError) {
           console.error('Erro ao buscar dados do usuário no login:', userError);
-          await supabase.auth.signOut();
           if (isMounted) {
             setUser(null);
             setLoading(false);
@@ -161,7 +149,7 @@ export const useAuthState = () => {
 
     return () => {
       isMounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
+      
       authListener.subscription.unsubscribe();
     };
   }, []); // Dependências vazias para executar apenas uma vez

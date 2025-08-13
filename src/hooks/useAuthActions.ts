@@ -82,6 +82,7 @@ export const useAuthActions = ({ setUser, setLoading }: UseAuthActionsParams) =>
       
       // Navegar para o dashboard após login bem-sucedido
       navigate('/dashboard');
+      setLoading(false);
       
     } catch (error) {
       console.error('Erro no login:', error);
