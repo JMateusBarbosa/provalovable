@@ -17,28 +17,30 @@ export const useAuthState = () => {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Flag para controlar se o componente ainda está montado
     let isMounted = true;
     let timeoutId: number | undefined;
     
-    // Verificar o estado da autenticação no carregamento
     const checkAuth = async () => {
       try {
+        console.log('Iniciando verificação de autenticação...');
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        // Se o componente foi desmontado, não continue
         if (!isMounted) return;
         
         if (error) {
           console.error('Erro ao verificar sessão:', error);
           if (isMounted) {
+            setUser(null);
             setLoading(false);
             setAuthChecked(true);
           }
           return;
         }
         
-        if (session) {
+        if (session?.user) {
+          console.log('Sessão encontrada, buscando dados do usuário...');
+          
           // Buscar os dados completos do usuário
           const { data: userData, error: userError } = await supabase
             .from('users')
@@ -46,12 +48,11 @@ export const useAuthState = () => {
             .eq('auth_id', session.user.id)
             .single();
             
-          // Se o componente foi desmontado, não continue
           if (!isMounted) return;
           
           if (userError) {
             console.error('Erro ao buscar dados do usuário:', userError);
-            // Se houver erro ao buscar o usuário, fazemos logout
+            // Se houver erro ao buscar o usuário, fazemos logout silencioso
             await supabase.auth.signOut();
             if (isMounted) {
               setUser(null);
@@ -59,6 +60,7 @@ export const useAuthState = () => {
               setAuthChecked(true);
             }
           } else if (userData) {
+            console.log('Usuário encontrado:', userData.username);
             if (isMounted) {
               setUser({
                 id: userData.id,
@@ -72,7 +74,7 @@ export const useAuthState = () => {
             }
           }
         } else {
-          // Não há sessão ativa
+          console.log('Nenhuma sessão ativa encontrada');
           if (isMounted) {
             setUser(null);
             setLoading(false);
@@ -82,20 +84,22 @@ export const useAuthState = () => {
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
         if (isMounted) {
+          setUser(null);
           setLoading(false);
           setAuthChecked(true);
         }
       }
     };
 
-    // Definir um timeout para garantir que o estado de carregamento não fique preso
+    // Timeout de segurança mais curto
     timeoutId = window.setTimeout(() => {
-      if (isMounted && loading) {
+      if (isMounted && loading && !authChecked) {
         console.warn('Timeout de verificação de autenticação atingido');
+        setUser(null);
         setLoading(false);
         setAuthChecked(true);
       }
-    }, 5000);
+    }, 3000); // Reduzido para 3 segundos
 
     checkAuth();
     
@@ -103,9 +107,24 @@ export const useAuthState = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
       
-      console.log('Auth state change:', event);
+      console.log('Mudança no estado de autenticação:', event);
       
-      if (event === 'SIGNED_IN' && session) {
+      // Resetar estados durante mudanças
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_OUT') {
+          console.log('Usuário deslogado');
+          if (isMounted) {
+            setUser(null);
+            setLoading(false);
+            setAuthChecked(true);
+          }
+          return;
+        }
+      }
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('Usuário logado, buscando dados...');
+        
         // Buscar os dados completos do usuário
         const { data: userData, error: userError } = await supabase
           .from('users')
@@ -116,7 +135,7 @@ export const useAuthState = () => {
         if (!isMounted) return;
         
         if (userError) {
-          console.error('Erro ao buscar dados do usuário:', userError);
+          console.error('Erro ao buscar dados do usuário no login:', userError);
           await supabase.auth.signOut();
           if (isMounted) {
             setUser(null);
@@ -124,6 +143,7 @@ export const useAuthState = () => {
             setAuthChecked(true);
           }
         } else if (userData) {
+          console.log('Login bem-sucedido para:', userData.username);
           if (isMounted) {
             setUser({
               id: userData.id,
@@ -136,22 +156,15 @@ export const useAuthState = () => {
             setAuthChecked(true);
           }
         }
-      } else if (event === 'SIGNED_OUT') {
-        if (isMounted) {
-          setUser(null);
-          setLoading(false);
-          setAuthChecked(true);
-        }
       }
     });
 
-    // Limpar o listener e timeout ao desmontar o componente e marcar como desmontado
     return () => {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Dependências vazias para executar apenas uma vez
 
   return { user, setUser, loading, setLoading, authChecked };
 };
