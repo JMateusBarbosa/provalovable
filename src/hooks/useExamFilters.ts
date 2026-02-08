@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format, isSameDay, startOfDay, endOfDay } from "date-fns";
+import { isSameDay } from "date-fns";
 import { ExamSchedule, FilterState, ExamStatus } from "@/lib/types";
 
 /**
@@ -8,6 +8,24 @@ import { ExamSchedule, FilterState, ExamStatus } from "@/lib/types";
  */
 const getEffectiveExamDate = (exam: ExamSchedule): Date => {
   return exam.examTs || exam.examDate;
+};
+
+/**
+ * Formata uma data para string no formato YYYY-MM-DD usando componentes locais
+ * Isso evita problemas de timezone que ocorrem com toISOString()
+ */
+const formatLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Verifica se duas datas são do mesmo dia usando componentes locais
+ */
+const isSameLocalDay = (date1: Date, date2: Date): boolean => {
+  return formatLocalDateString(date1) === formatLocalDateString(date2);
 };
 
 export function useExamFilters(exams: ExamSchedule[]) {
@@ -40,14 +58,15 @@ export function useExamFilters(exams: ExamSchedule[]) {
       );
     }
     
-    // Filtro por data: usa intervalo de início/fim do dia para comparação correta
+    // Filtro por data: compara usando componentes locais de data (ano, mês, dia)
+    // Isso evita problemas de timezone ao comparar timestamps UTC com datas locais
     if (filters.examDate instanceof Date) {
-      const filterDayStart = startOfDay(filters.examDate);
-      const filterDayEnd = endOfDay(filters.examDate);
+      const filterDateStr = formatLocalDateString(filters.examDate);
       
       result = result.filter(exam => {
         const effectiveDate = getEffectiveExamDate(exam);
-        return effectiveDate >= filterDayStart && effectiveDate <= filterDayEnd;
+        const examDateStr = formatLocalDateString(effectiveDate);
+        return examDateStr === filterDateStr;
       });
     }
     
@@ -65,15 +84,14 @@ export function useExamFilters(exams: ExamSchedule[]) {
     }
     
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     // Ordenação: provas de hoje primeiro, depois por data/hora (exam_ts)
     result.sort((a, b) => {
       const aEffective = getEffectiveExamDate(a);
       const bEffective = getEffectiveExamDate(b);
       
-      const aIsToday = isSameDay(aEffective, today);
-      const bIsToday = isSameDay(bEffective, today);
+      const aIsToday = isSameLocalDay(aEffective, today);
+      const bIsToday = isSameLocalDay(bEffective, today);
       
       if (aIsToday && !bIsToday) return -1;
       if (!aIsToday && bIsToday) return 1;
