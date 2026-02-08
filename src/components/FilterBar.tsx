@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { dayIntervalIsoForDate, makeExamTsFromDateAndTime } from '@/utils/dates';
 import {
   Popover,
   PopoverContent,

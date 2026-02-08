@@ -1,7 +1,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { ExamSchedule } from './types';
-import { toSupabaseExam, fromSupabaseExam, combineDateTime } from './supabase-schema';
+import { toSupabaseExam, fromSupabaseExam} from './supabase-schema';
+import { makeExamTsFromDateAndTime } from '@/utils/dates';
 
 // URLs e chaves do Supabase
 // IMPORTANTE: Estas credenciais são seguras para uso no cliente pois
@@ -102,18 +103,15 @@ export const examApi = {
    * @returns Lista de agendamentos de exames
    */
   getExams: async (schoolId: string): Promise<ExamSchedule[]> => {
-    const { data, error } = await supabase
-      .from('exam_schedules')
-      .select('*')
-      .eq('school_id', schoolId)
-      .order('exam_ts', { ascending: true, nullsFirst: false });
-    
-    console.log('Dados retornados do Supabase:', data);
+      const { data, error } = await supabase
+        .from('exam_schedules')
+        .select('*')
+        .eq('school_id', schoolId)
+        .order('exam_ts', { ascending: true, nullsFirst: false });
 
-    if (error) throw error;
-    
-    return data ? data.map(fromSupabaseExam) : [];
-  },
+      if (error) throw error;
+      return (data ?? []).map(fromSupabaseExam);
+    },
   
   /**
    * Busca um exame específico por ID
@@ -121,33 +119,36 @@ export const examApi = {
    * @returns Dados do exame ou null se não encontrado
    */
   getExamById: async (id: string): Promise<ExamSchedule | null> => {
-    const { data, error } = await supabase
-      .from('exam_schedules')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    
-    return data ? fromSupabaseExam(data) : null;
-  },
-  
+      const { data, error } = await supabase
+        .from('exam_schedules')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116' /* not found */) return null;
+        throw error;
+      }
+
+      return fromSupabaseExam(data);
+    },
   /**
    * Cria um novo agendamento de exame
    * @param exam Dados do exame a criar (sem ID)
    * @param schoolId ID da escola associada ao exame
    * @returns Dados do exame criado
    */
-  createExam: async (exam: Omit<ExamSchedule, 'id'>, schoolId: string): Promise<ExamSchedule> => {
+  createExam: async (payload: Partial<ExamSchedule>) => {
+    // usa toSupabaseExam para manter snake_case
+    const insertPayload = toSupabaseExam(payload);
     const { data, error } = await supabase
       .from('exam_schedules')
-      .insert(toSupabaseExam(exam, schoolId))
-      .select()
-      .single();
-    
+      .insert([insertPayload])
+      .select('*'); // retorna o objeto inserido
+
     if (error) throw error;
-    
-    return fromSupabaseExam(data);
+    // data é array, pegamos o primeiro e mapeamos
+    return fromSupabaseExam(Array.isArray(data) ? data[0] : data);
   },
   
   /**
@@ -156,48 +157,78 @@ export const examApi = {
    * @param exam Dados parciais do exame para atualização
    * @returns Dados do exame atualizado
    */
-  updateExam: async (id: string, exam: Partial<ExamSchedule>): Promise<ExamSchedule> => {
+    updateExam: async (id: string, exam: Partial<ExamSchedule>): Promise<ExamSchedule> => {
     const updateData: Record<string, any> = {};
-    
-    // Apenas converte campos que existem na atualização parcial
+
+    // Campos simples
     if (exam.studentName !== undefined) updateData.student_name = exam.studentName;
     if (exam.module !== undefined) updateData.module = exam.module;
     if (exam.pcNumber !== undefined) updateData.pc_number = exam.pcNumber;
     if (exam.examType !== undefined) updateData.exam_type = exam.examType;
     if (exam.status !== undefined) updateData.status = exam.status;
-    
-    // Se data ou hora foram atualizados, recalcular exam_ts
-    if (exam.examDate !== undefined || exam.examTime !== undefined) {
-      // Precisamos buscar o exam atual para combinar data/hora corretamente
-      const { data: currentExam } = await supabase
+    if (exam.schoolId !== undefined) {
+      // NÃO permitir mudança de escola por segurança do domínio — comente/remova se quiser permitir
+      // updateData.school_id = exam.schoolId;
+    }
+
+    // Prioridade 1: se o caller enviou examTs já pronto, use ele diretamente
+    if (exam.examTs !== undefined && exam.examTs !== null) {
+      // exam.examTs pode ser Date ou string ISO
+      updateData.exam_ts = exam.examTs instanceof Date ? exam.examTs.toISOString() : exam.examTs;
+      // também atualize exam_time se enviado (mantemos para UX)
+      if (exam.examTime !== undefined) updateData.exam_time = exam.examTime;
+      if (exam.examDate !== undefined) updateData.exam_date = exam.examDate ? exam.examDate.toISOString() : null;
+    } else if (exam.examDate !== undefined || exam.examTime !== undefined) {
+      // Caso caller não envie examTs, recombinamos usando a função compartilhada com o frontend
+      // Buscar o exame atual para obter valores faltantes
+      const { data: currentExam, error: fetchErr } = await supabase
         .from('exam_schedules')
         .select('exam_date, exam_time, exam_ts')
         .eq('id', id)
         .single();
-      
-      const newDate = exam.examDate || (currentExam?.exam_ts ? new Date(currentExam.exam_ts) : new Date(currentExam?.exam_date));
-      const newTime = exam.examTime || currentExam?.exam_time;
-      
-      if (exam.examDate !== undefined) updateData.exam_date = exam.examDate.toISOString();
-      if (exam.examTime !== undefined) updateData.exam_time = exam.examTime;
-      
-      // Atualizar exam_ts com a combinação
-      const examTs = combineDateTime(newDate, newTime);
-      updateData.exam_ts = examTs.toISOString();
+
+      if (fetchErr) throw fetchErr;
+
+      // determinar nova data e hora (prioriza valores enviados no payload)
+      // currentExam.exam_ts existe em UTC string ou null
+      let baseDate: Date;
+      if (exam.examDate) {
+        baseDate = exam.examDate;
+      } else if (currentExam?.exam_ts) {
+        baseDate = new Date(currentExam.exam_ts);
+      } else if (currentExam?.exam_date) {
+        baseDate = new Date(currentExam.exam_date);
+      } else {
+        baseDate = new Date();
+      }
+
+      const newTime = (exam.examTime !== undefined && exam.examTime !== null)
+        ? exam.examTime
+        : currentExam?.exam_time ?? '00:00';
+
+      // gerar exam_ts usando a mesma lógica do frontend (Manaus)
+      const examTsIso = makeExamTsFromDateAndTime(baseDate, newTime);
+
+      // preencher updateData
+      updateData.exam_ts = examTsIso;
+      updateData.exam_time = newTime;
+      if (exam.examDate !== undefined) {
+        updateData.exam_date = exam.examDate ? exam.examDate.toISOString() : null;
+      }
     }
-    // Não permitimos atualizar a escola
-    
+
     const { data, error } = await supabase
       .from('exam_schedules')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
-    
+
     if (error) throw error;
-    
+
     return fromSupabaseExam(data);
   },
+
   
   /**
    * Exclui um agendamento de exame
