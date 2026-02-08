@@ -21,11 +21,12 @@ export type ExamSchedule = {
   studentName: string;        // Nome do aluno
   module: string;             // Módulo/disciplina
   pcNumber: number;           // Número do computador
-  examDate: Date;             // Data do exame
+  examDate: Date;             // Data do exame (legado - apenas para registros antigos)
   examTime: string;           // Horário do exame (formato: HH:MM)
   examType: ExamType;         // Tipo do exame (P1, Rec.1, Rec.2)
   status: ExamStatus;         // Status do exame (Pendente, Aprovado, Reprovado)
   schoolId: string;           // ID da escola associada
+  examTs: Date | null;        // Data + hora combinada (fonte principal para novos registros)
 }
 
 /**
