@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { ExamSchedule } from './types';
-import { toSupabaseExam, fromSupabaseExam } from './supabase-schema';
+import { toSupabaseExam, fromSupabaseExam, combineDateTime } from './supabase-schema';
 
 // URLs e chaves do Supabase
 // IMPORTANTE: Estas credenciais são seguras para uso no cliente pois
@@ -106,7 +106,7 @@ export const examApi = {
       .from('exam_schedules')
       .select('*')
       .eq('school_id', schoolId)
-      .order('exam_date', { ascending: true });
+      .order('exam_ts', { ascending: true, nullsFirst: false });
     
     console.log('Dados retornados do Supabase:', data);
 
@@ -163,10 +163,28 @@ export const examApi = {
     if (exam.studentName !== undefined) updateData.student_name = exam.studentName;
     if (exam.module !== undefined) updateData.module = exam.module;
     if (exam.pcNumber !== undefined) updateData.pc_number = exam.pcNumber;
-    if (exam.examDate !== undefined) updateData.exam_date = exam.examDate.toISOString();
-    if (exam.examTime !== undefined) updateData.exam_time = exam.examTime;
     if (exam.examType !== undefined) updateData.exam_type = exam.examType;
     if (exam.status !== undefined) updateData.status = exam.status;
+    
+    // Se data ou hora foram atualizados, recalcular exam_ts
+    if (exam.examDate !== undefined || exam.examTime !== undefined) {
+      // Precisamos buscar o exam atual para combinar data/hora corretamente
+      const { data: currentExam } = await supabase
+        .from('exam_schedules')
+        .select('exam_date, exam_time, exam_ts')
+        .eq('id', id)
+        .single();
+      
+      const newDate = exam.examDate || (currentExam?.exam_ts ? new Date(currentExam.exam_ts) : new Date(currentExam?.exam_date));
+      const newTime = exam.examTime || currentExam?.exam_time;
+      
+      if (exam.examDate !== undefined) updateData.exam_date = exam.examDate.toISOString();
+      if (exam.examTime !== undefined) updateData.exam_time = exam.examTime;
+      
+      // Atualizar exam_ts com a combinação
+      const examTs = combineDateTime(newDate, newTime);
+      updateData.exam_ts = examTs.toISOString();
+    }
     // Não permitimos atualizar a escola
     
     const { data, error } = await supabase
