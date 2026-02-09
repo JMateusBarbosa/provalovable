@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ExamSchedule, FilterState, ExamStatus } from "@/lib/types";
+import { makeExamTsFromDateAndTime } from "@/utils/dates";
 
 const MANAUS_TIMEZONE = "America/Manaus";
 
@@ -10,6 +11,27 @@ const getEffectiveExamDate = (exam: ExamSchedule): Date => {
   return exam.examTs || exam.examDate;
 };
 
+/**
+ * Retorna o timestamp efetivo (em ms) do exame.
+ * Usa exam_ts quando disponível; caso contrário combina exam_date + exam_time.
+ */
+const getEffectiveExamTimestamp = (exam: ExamSchedule): number | null => {
+  if (exam.examTs) {
+    return exam.examTs.getTime();
+  }
+  if (exam.examDate && exam.examTime) {
+    const examTsIso = makeExamTsFromDateAndTime(exam.examDate, exam.examTime);
+    const examTsDate = new Date(examTsIso);
+    if (!Number.isNaN(examTsDate.getTime())) {
+      return examTsDate.getTime();
+    }
+  }
+  if (exam.examDate) {
+    const fallbackTs = exam.examDate.getTime();
+    return Number.isNaN(fallbackTs) ? null : fallbackTs;
+  }
+  return null;
+};
 /**
  * Retorna YYYY-MM-DD no fuso informado (ex.: America/Manaus), sem sofrer com toISOString().
  */
@@ -32,14 +54,16 @@ const formatDateStringInTimeZone = (date: Date, timeZone: string): string => {
 };
 
 /**
- * Formata a data selecionada no calendário como YYYY-MM-DD usando componentes do próprio Date.
- * Aqui tratamos como “data de calendário” (sem timezone), para comparar com o dia em Manaus.
+ * Converte a data do calendário para um Date em UTC (meio-dia),
+ * para evitar deslocamentos de dia quando o navegador está em outro fuso.
  */
-const formatCalendarDateString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+const getManausDayIntervalUtc = (date: Date): { start: number; end: number } => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const start = Date.UTC(year, month, day, 4, 0, 0);
+    const end = Date.UTC(year, month, day + 1, 4, 0, 0);
+    return { start, end };
 };
 
 export function useExamFilters(exams: ExamSchedule[]) {
@@ -79,15 +103,12 @@ export function useExamFilters(exams: ExamSchedule[]) {
     // Filtro por data: compara o “dia” no fuso America/Manaus (igual ao SQL)
     // Evita discrepâncias quando o navegador está em outro timezone.
     if (filters.examDate instanceof Date) {
-      const filterDayStr = formatCalendarDateString(filters.examDate);
+      const { start, end } = getManausDayIntervalUtc(filters.examDate);
 
       result = result.filter((exam) => {
         const effectiveDate = getEffectiveExamDate(exam);
-        const examDayStr = formatDateStringInTimeZone(
-          effectiveDate,
-          MANAUS_TIMEZONE
-        );
-        return examDayStr === filterDayStr;
+        const timestamp = getEffectiveExamTimestamp(exam);
+        return timestamp !== null && timestamp >= start && timestamp < end;
       });
     }
 

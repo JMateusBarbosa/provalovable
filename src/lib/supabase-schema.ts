@@ -19,12 +19,17 @@ export const toSupabaseExam = (
 
   // Fonte da verdade
   if (exam.examTs !== undefined) {
-  out.exam_ts = exam.examTs instanceof Date ? exam.examTs.toISOString() : exam.examTs;
+    out.exam_ts = exam.examTs instanceof Date ? exam.examTs.toISOString() : exam.examTs;
   }
 
-  // Campo legado (opcional)
+   // Campo legado (opcional). Se não vier, derive do exam_ts para atender NOT NULL.
   if (exam.examDate !== undefined && exam.examDate != null) {
-  out.exam_date = exam.examDate.toISOString();
+    out.exam_date = exam.examDate.toISOString();
+  } else if (exam.examTs !== undefined && exam.examTs !== null) {
+    const examTsDate = exam.examTs instanceof Date ? exam.examTs : new Date(exam.examTs);
+    if (!Number.isNaN(examTsDate.getTime())) {
+      out.exam_date = examTsDate.toISOString();
+    }
   }
 
   return out;
