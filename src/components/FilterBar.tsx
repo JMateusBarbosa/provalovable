@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { dayIntervalIsoForDate, makeExamTsFromDateAndTime } from '@/utils/dates';
 import {
   Popover,
   PopoverContent,
@@ -150,7 +149,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {["7:30","8:00","8:30","9:00", "9:30","10:00", "14:00", "15:00", "16:00", "17:00","18:00"].map((time) => (
+                {["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"].map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>
@@ -183,20 +182,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
         
         {/* Center the action buttons properly within the blue filter box */}
         <div className="flex justify-center mt-4 space-x-4">
-          <Button 
-            type="button" 
-            className="button-primary"
-            onClick={() => {
-              // Apply filters with current date if needed
-              const today = new Date();
-              setFilters({
-                ...filters,
-                examDate: filters.examDate || today
-              });
-            }}
-          >
-            Filtrar
-          </Button>
+            <Button 
+              type="button" 
+              className="button-primary"
+              onClick={() => setFilters({ ...filters })}
+            >
+              Filtrar
+            </Button>
           <Button
             type="button"
             className="button-secondary"
