@@ -149,7 +149,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
+<<<<<<< HEAD
                  {["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"].map((time) => (
+=======
+                {["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"].map((time) => (
+>>>>>>> 1397eaebab09cf5d34101bef8433d0d364805285
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>
@@ -182,7 +186,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
         
         {/* Center the action buttons properly within the blue filter box */}
         <div className="flex justify-center mt-4 space-x-4">
+<<<<<<< HEAD
           <Button 
+=======
+            <Button 
+>>>>>>> 1397eaebab09cf5d34101bef8433d0d364805285
               type="button" 
               className="button-primary"
               onClick={() => setFilters({ ...filters })}
