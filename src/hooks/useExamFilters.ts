@@ -1,83 +1,36 @@
 import { useState, useEffect } from "react";
 import { ExamSchedule, FilterState, ExamStatus } from "@/lib/types";
-import { makeExamTsFromDateAndTime } from "@/utils/dates";
-import { fromZonedTime} from "date-fns-tz";
 
-const MANAUS_TIMEZONE = "America/Manaus";
+const MANAUS_TZ = "America/Manaus";
 
 /**
- * Obtém a data efetiva do exame (exam_ts se disponível, senão exam_date)
+ * Formata uma Date como "YYYY-MM-DD" no fuso America/Manaus.
+ * Usa Intl.DateTimeFormat para ser 100% preciso independente do timezone do navegador.
  */
-const getEffectiveExamDate = (exam: ExamSchedule): Date => {
-  return exam.examTs || exam.examDate;
-};
-
-// --- robust getEffectiveExamTimestamp (aceita string|Date|null)
-const getEffectiveExamTimestamp = (exam: ExamSchedule): number | null => {
-  // exam.examTs may already be a Date (from fromSupabaseExam) or null
-  if (exam.examTs) {
-    const d = exam.examTs instanceof Date ? exam.examTs : new Date(exam.examTs);
-    if (!Number.isNaN(d.getTime())) return d.getTime();
-  }
-
-  // fallback: if both examDate (Date) and examTime (HH:mm) exist, build ISO via your util
-  if (exam.examDate && exam.examTime) {
-    try {
-      const examTsIso = makeExamTsFromDateAndTime(exam.examDate, exam.examTime);
-      const t = new Date(examTsIso);
-      if (!Number.isNaN(t.getTime())) return t.getTime();
-    } catch (e) {
-      // ignore and fallback
-    }
-  }
-  if (exam.examDate) {
-    const t = exam.examDate instanceof Date ? exam.examDate.getTime() : new Date(exam.examDate).getTime();
-    return Number.isNaN(t) ? null : t;
-  }
-
-  return null;
-};
-/**
- * Retorna YYYY-MM-DD no fuso informado (ex.: America/Manaus), sem sofrer com toISOString().
- */
-const formatDateStringInTimeZone = (date: Date, timeZone: string): string => {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
+const toManausDateStr = (date: Date): string => {
+  // en-CA locale retorna no formato YYYY-MM-DD
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: MANAUS_TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(date);
-
-  const year = parts.find((p) => p.type === "year")?.value;
-  const month = parts.find((p) => p.type === "month")?.value;
-  const day = parts.find((p) => p.type === "day")?.value;
-
-  // Fallback extremamente defensivo
-  if (!year || !month || !day) return "";
-
-  return `${year}-${month}-${day}`;
+  }).format(date);
 };
 
-// --- replace getManausDayIntervalUtc with this version
-const getManausDayIntervalUtc = (date: Date): { start: number; end: number } => {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  // Dia lógico interpretado como Manaus
-  const startLocal = `${year}-${pad(month)}-${pad(day)}T00:00:00`;
-  const endLocal = `${year}-${pad(month)}-${pad(day + 1)}T00:00:00`;
-
-  // Agora sim: converter corretamente para UTC
-  const startUtc = fromZonedTime(startLocal, MANAUS_TIMEZONE);
-  const endUtc = fromZonedTime(endLocal, MANAUS_TIMEZONE);
-
-  return {
-    start: startUtc.getTime(),
-    end: endUtc.getTime(),
-  };
+/**
+ * Obtém a data efetiva do exame para comparação.
+ * Prioriza examTs; se null, usa examDate.
+ */
+const getEffectiveDate = (exam: ExamSchedule): Date | null => {
+  if (exam.examTs) {
+    const d = exam.examTs instanceof Date ? exam.examTs : new Date(exam.examTs as any);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  if (exam.examDate) {
+    const d = exam.examDate instanceof Date ? exam.examDate : new Date(exam.examDate as any);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
 };
 
 export function useExamFilters(exams: ExamSchedule[]) {
@@ -94,69 +47,65 @@ export function useExamFilters(exams: ExamSchedule[]) {
   useEffect(() => {
     let result = [...exams];
 
+    // Filtro por nome
     if (filters.studentName) {
       result = result.filter((exam) =>
-        exam.studentName
-          ?.toLowerCase()
-          .includes(filters.studentName.toLowerCase())
+        exam.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
       );
     }
 
+    // Filtro por módulo
     if (filters.module) {
       result = result.filter((exam) =>
         exam.module.toLowerCase().includes(filters.module.toLowerCase())
       );
     }
 
+    // Filtro por PC
     if (filters.pcNumber && filters.pcNumber !== "all") {
       result = result.filter(
         (exam) => String(exam.pcNumber) === String(filters.pcNumber)
       );
     }
 
-    // Filtro por data: compara o “dia” no fuso America/Manaus (igual ao SQL)
-    // Evita discrepâncias quando o navegador está em outro timezone.
+    // Filtro por data: compara strings YYYY-MM-DD no fuso Manaus
     if (filters.examDate instanceof Date) {
-      const { start, end } = getManausDayIntervalUtc(filters.examDate);
+      const filterDateStr = toManausDateStr(filters.examDate);
 
       result = result.filter((exam) => {
-        const timestamp = getEffectiveExamTimestamp(exam);
-        return timestamp !== null && timestamp >= start && timestamp < end;
+        const effective = getEffectiveDate(exam);
+        if (!effective) return false;
+        const examDateStr = toManausDateStr(effective);
+        return examDateStr === filterDateStr;
       });
     }
 
-    // Filtro por horário: mantém lógica existente (campo textual HH:MM)
+    // Filtro por horário
     if (filters.examTime && filters.examTime !== "all") {
       result = result.filter((exam) => exam.examTime === filters.examTime);
     }
 
+    // Filtro por status
     if (filters.status !== "all") {
       result = result.filter((exam) => exam.status === (filters.status as ExamStatus));
     }
 
-    // Ordenação: “hoje” (em Manaus) primeiro, depois por timestamp
-    const todayManausStr = formatDateStringInTimeZone(
-      new Date(),
-      MANAUS_TIMEZONE
-    );
+    // Ordenação: "hoje" primeiro, depois cronológico
+    const todayStr = toManausDateStr(new Date());
 
     result.sort((a, b) => {
-      const aTs = getEffectiveExamTimestamp(a) ?? 0;
-      const bTs = getEffectiveExamTimestamp(b) ?? 0;
+      const aDate = getEffectiveDate(a);
+      const bDate = getEffectiveDate(b);
 
-      const aEffective = new Date(aTs);
-      const bEffective = new Date(bTs);
-
-
-      const aIsToday =
-        formatDateStringInTimeZone(aEffective, MANAUS_TIMEZONE) === todayManausStr;
-      const bIsToday =
-        formatDateStringInTimeZone(bEffective, MANAUS_TIMEZONE) === todayManausStr;
+      const aIsToday = aDate ? toManausDateStr(aDate) === todayStr : false;
+      const bIsToday = bDate ? toManausDateStr(bDate) === todayStr : false;
 
       if (aIsToday && !bIsToday) return -1;
       if (!aIsToday && bIsToday) return 1;
 
-      return aEffective.getTime() - bEffective.getTime();
+      const aTime = aDate?.getTime() ?? 0;
+      const bTime = bDate?.getTime() ?? 0;
+      return aTime - bTime;
     });
 
     setFilteredExams(result);
