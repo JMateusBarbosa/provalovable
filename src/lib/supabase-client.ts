@@ -103,14 +103,28 @@ export const examApi = {
    * @returns Lista de agendamentos de exames
    */
   getExams: async (schoolId: string): Promise<ExamSchedule[]> => {
-      const { data, error } = await supabase
-        .from('exam_schedules')
-        .select('*')
-        .eq('school_id', schoolId)
-        .order('exam_ts', { ascending: true, nullsFirst: false });
+      // Buscar TODOS os registros (Supabase limita a 1000 por padrão)
+      let allData: any[] = [];
+      let from = 0;
+      const PAGE_SIZE = 1000;
 
-      if (error) throw error;
-      return (data ?? []).map(fromSupabaseExam);
+      while (true) {
+        const { data, error: pageError } = await supabase
+          .from('exam_schedules')
+          .select('*')
+          .eq('school_id', schoolId)
+          .order('exam_ts', { ascending: true, nullsFirst: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (pageError) throw pageError;
+        if (!data || data.length === 0) break;
+
+        allData = allData.concat(data);
+        if (data.length < PAGE_SIZE) break; // última página
+        from += PAGE_SIZE;
+      }
+
+      return allData.map(fromSupabaseExam);
     },
   
   /**
