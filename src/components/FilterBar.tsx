@@ -185,14 +185,20 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
         
         {/* Center the action buttons properly within the blue filter box */}
         <div className="flex justify-center mt-4 space-x-4">
-        <Button
-            
-              type="button" 
-              className="button-primary"
-              onClick={() => setFilters({ ...filters })}
-            >
-              Filtrar
-            </Button>
+          <Button
+            type="button" 
+            className="button-primary"
+            onClick={() => {
+              // Se nenhuma data estiver selecionada, filtra pelo dia de hoje
+              if (!filters.examDate) {
+                setFilters({ ...filters, examDate: new Date() });
+              } else {
+                setFilters({ ...filters });
+              }
+            }}
+          >
+            Filtrar
+          </Button>
           <Button
             type="button"
             className="button-secondary"
