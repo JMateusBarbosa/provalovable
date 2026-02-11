@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ExamSchedule, FilterState, ExamStatus } from "@/lib/types";
 import { makeExamTsFromDateAndTime } from "@/utils/dates";
+import { fromZonedTime} from "date-fns-tz";
 
 const MANAUS_TIMEZONE = "America/Manaus";
 
@@ -11,25 +12,29 @@ const getEffectiveExamDate = (exam: ExamSchedule): Date => {
   return exam.examTs || exam.examDate;
 };
 
-/**
- * Retorna o timestamp efetivo (em ms) do exame.
- * Usa exam_ts quando disponível; caso contrário combina exam_date + exam_time.
- */
+// --- robust getEffectiveExamTimestamp (aceita string|Date|null)
 const getEffectiveExamTimestamp = (exam: ExamSchedule): number | null => {
+  // exam.examTs may already be a Date (from fromSupabaseExam) or null
   if (exam.examTs) {
-    return exam.examTs.getTime();
+    const d = exam.examTs instanceof Date ? exam.examTs : new Date(exam.examTs);
+    if (!Number.isNaN(d.getTime())) return d.getTime();
   }
+
+  // fallback: if both examDate (Date) and examTime (HH:mm) exist, build ISO via your util
   if (exam.examDate && exam.examTime) {
-    const examTsIso = makeExamTsFromDateAndTime(exam.examDate, exam.examTime);
-    const examTsDate = new Date(examTsIso);
-    if (!Number.isNaN(examTsDate.getTime())) {
-      return examTsDate.getTime();
+    try {
+      const examTsIso = makeExamTsFromDateAndTime(exam.examDate, exam.examTime);
+      const t = new Date(examTsIso);
+      if (!Number.isNaN(t.getTime())) return t.getTime();
+    } catch (e) {
+      // ignore and fallback
     }
   }
   if (exam.examDate) {
-    const fallbackTs = exam.examDate.getTime();
-    return Number.isNaN(fallbackTs) ? null : fallbackTs;
+    const t = exam.examDate instanceof Date ? exam.examDate.getTime() : new Date(exam.examDate).getTime();
+    return Number.isNaN(t) ? null : t;
   }
+
   return null;
 };
 /**
@@ -53,17 +58,26 @@ const formatDateStringInTimeZone = (date: Date, timeZone: string): string => {
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Converte a data do calendário para um Date em UTC (meio-dia),
- * para evitar deslocamentos de dia quando o navegador está em outro fuso.
- */
+// --- replace getManausDayIntervalUtc with this version
 const getManausDayIntervalUtc = (date: Date): { start: number; end: number } => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-    const start = Date.UTC(year, month, day, 4, 0, 0);
-    const end = Date.UTC(year, month, day + 1, 4, 0, 0);
-    return { start, end };
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  // Dia lógico interpretado como Manaus
+  const startLocal = `${year}-${pad(month)}-${pad(day)}T00:00:00`;
+  const endLocal = `${year}-${pad(month)}-${pad(day + 1)}T00:00:00`;
+
+  // Agora sim: converter corretamente para UTC
+  const startUtc = fromZonedTime(startLocal, MANAUS_TIMEZONE);
+  const endUtc = fromZonedTime(endLocal, MANAUS_TIMEZONE);
+
+  return {
+    start: startUtc.getTime(),
+    end: endUtc.getTime(),
+  };
 };
 
 export function useExamFilters(exams: ExamSchedule[]) {
@@ -106,7 +120,6 @@ export function useExamFilters(exams: ExamSchedule[]) {
       const { start, end } = getManausDayIntervalUtc(filters.examDate);
 
       result = result.filter((exam) => {
-        const effectiveDate = getEffectiveExamDate(exam);
         const timestamp = getEffectiveExamTimestamp(exam);
         return timestamp !== null && timestamp >= start && timestamp < end;
       });
@@ -128,8 +141,12 @@ export function useExamFilters(exams: ExamSchedule[]) {
     );
 
     result.sort((a, b) => {
-      const aEffective = getEffectiveExamDate(a);
-      const bEffective = getEffectiveExamDate(b);
+      const aTs = getEffectiveExamTimestamp(a) ?? 0;
+      const bTs = getEffectiveExamTimestamp(b) ?? 0;
+
+      const aEffective = new Date(aTs);
+      const bEffective = new Date(bTs);
+
 
       const aIsToday =
         formatDateStringInTimeZone(aEffective, MANAUS_TIMEZONE) === todayManausStr;
