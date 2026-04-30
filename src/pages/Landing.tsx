@@ -23,6 +23,8 @@ const Landing = () => {
             />
             <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
               Sistema de Agendamento de Provas
+              
+              Area de teste
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-8 max-w-2xl px-4">
               Simplifique o processo de agendamento de provas com nossa plataforma intuitiva e eficiente.
