@@ -67,3 +67,15 @@ Simply open [Lovable](https://lovable.dev/projects/c9977b44-e71a-41e2-8837-ae79e
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
+## Configuração de backend (Supabase x Nhost)
+
+Durante a migração, o frontend possui um seletor de provider via variável:
+
+- `VITE_BACKEND_PROVIDER=supabase` (estado atual em produção)
+- `VITE_BACKEND_PROVIDER=nhost` (preparação para migração)
+
+> Importante: nesta primeira etapa, o runtime ainda está implementado com cliente Supabase.
+> Se `VITE_BACKEND_PROVIDER=nhost`, a aplicação falha de forma explícita para evitar conexão acidental com backend incorreto.
+
+Use o arquivo `.env.example` como referência para configurar as variáveis em ambiente local e na Vercel.

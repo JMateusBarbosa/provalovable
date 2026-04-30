@@ -3,15 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 import { ExamSchedule } from './types';
 import { toSupabaseExam, fromSupabaseExam} from './supabase-schema';
 import { makeExamTsFromDateAndTime } from '@/utils/dates';
+import { backendProvider, getSupabaseConfig } from './backend-config';
 
-// URLs e chaves do Supabase
-// IMPORTANTE: Estas credenciais são seguras para uso no cliente pois
-// possuem permissões limitadas via Row Level Security (RLS)
-const supabaseUrl = 'https://lndunjdjtxqnxbafedfx.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuZHVuamRqdHhxbnhiYWZlZGZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5Nzc1NzgsImV4cCI6MjA1NzU1MzU3OH0.maudsrhpJc1mMSMAEyFBIkZJIJ2I0mVeTc7Q6FclcRo';
+if (backendProvider !== 'supabase') {
+  throw new Error(
+    'Backend provider configurado para NHOST. A integração de runtime ainda usa cliente Supabase e precisa ser migrada por etapas.'
+  );
+}
+
+const supabaseConfig = getSupabaseConfig();
 
 // Cliente Supabase para interação com backend
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseConfig.url, supabaseConfig.key);
 
 // Importamos as funções de auth-api.ts
 import { authApi } from './auth-api';
