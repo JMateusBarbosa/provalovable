@@ -48,7 +48,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
 
   return (
     <div className="w-full bg-light-blue rounded-lg p-5 mb-6 shadow-sm border border-border animate-fade-up">
-      <form className="space-y-4">
+      <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-7 gap-4">
           {/* Student Name Filter */}
           <div className="relative">
@@ -213,7 +213,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
             Limpar
           </Button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
