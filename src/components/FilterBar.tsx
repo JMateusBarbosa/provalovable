@@ -30,6 +30,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
     setFilters({ ...filters, [field]: value });
   };
 
+  const clearExamDate = () => {
+    handleChange('examDate', null);
+  };
+
   const clearFilters = () => {
     const resetFilters: FilterState = {
       studentName: '',
@@ -107,33 +111,50 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Data da Prova
             </label>
-            <Popover>
-              <PopoverTrigger asChild>
+            <div className="relative">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "filter-input w-full justify-start text-left font-normal pr-9",
+                      !filters.examDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.examDate ? (
+                      format(filters.examDate, "dd/MM/yyyy")
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 z-50 pointer-events-auto">
+                  <Calendar
+                    mode="single"
+                    selected={filters.examDate || undefined}
+                    onSelect={(date) => handleChange('examDate', date ?? null)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {filters.examDate && (
                 <Button
-                  variant="outline"
-                  className={cn(
-                    "filter-input w-full justify-start text-left font-normal",
-                    !filters.examDate && "text-muted-foreground"
-                  )}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 z-10 h-7 w-7 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                  onClick={clearExamDate}
+                  aria-label="Limpar filtro de data"
+                  title="Limpar data"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.examDate ? (
-                    format(filters.examDate, "dd/MM/yyyy")
-                  ) : (
-                    <span>Selecione a data</span>
-                  )}
+                  <X className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50 pointer-events-auto">
-                <Calendar
-                  mode="single"
-                  selected={filters.examDate || undefined}
-                  onSelect={(date) => handleChange('examDate', date)}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
           </div>
           
           {/* Exam Time Filter */}
@@ -151,9 +172,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
 
-                 {["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"].map((time) => (
-
-               
+                {["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"].map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>
