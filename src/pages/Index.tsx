@@ -17,6 +17,14 @@ const Index = () => {
   const { filters, setFilters, filteredExams } = useExamFilters(exams);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const isTodayFilter =
+    filters.examDate instanceof Date &&
+    filters.examDate.toDateString() === getTodayInManaus().toDateString() &&
+    !filters.studentName &&
+    !filters.module;
+
+
+
   const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
   const getCurrentPageItems = () => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
