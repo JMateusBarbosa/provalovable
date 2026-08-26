@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /schedule
+Disallow: /login
+Disallow: /404
+
+Sitemap: https://labs-sistema.vercel.app/sitemap.xml
