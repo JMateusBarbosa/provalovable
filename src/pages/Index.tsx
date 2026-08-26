@@ -19,11 +19,14 @@ const Index = () => {
 
   const isTodayFilter =
     filters.examDate instanceof Date &&
-    filters.examDate.toDateString() === getTodayInManaus().toDateString() &&
-    !filters.studentName &&
-    !filters.module;
+    filters.examDate.toDateString() === getTodayInManaus().toDateString();
 
-
+  const hasAnySecondaryFilter =
+    Boolean(filters.studentName) ||
+    Boolean(filters.module) ||
+    (Boolean(filters.pcNumber) && filters.pcNumber !== 'all') ||
+    (Boolean(filters.examTime) && filters.examTime !== 'all') ||
+    filters.status !== 'all';
 
   const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
   const getCurrentPageItems = () => {
@@ -40,6 +43,36 @@ const Index = () => {
     setCurrentPage(1);
   }, [filters]);
 
+  const getEmptyState = () => {
+    if (isTodayFilter && !hasAnySecondaryFilter) {
+      return {
+        title: 'Nenhuma prova agendada para hoje.',
+        description: 'Use os filtros acima ou limpe a data para buscar provas de outras datas.',
+      };
+    }
+
+    if (filters.examDate === null) {
+      return {
+        title: 'Nenhuma prova encontrada.',
+        description: 'Tente ajustar os filtros para consultar o histórico de provas.',
+      };
+    }
+
+    if (filters.examDate instanceof Date) {
+      return {
+        title: 'Nenhuma prova encontrada para a data selecionada.',
+        description: 'Tente ajustar os demais filtros ou escolher outra data.',
+      };
+    }
+
+    return {
+      title: 'Nenhuma prova encontrada.',
+      description: 'Tente ajustar os filtros ou agendar uma nova prova.',
+    };
+  };
+
+  const emptyState = getEmptyState();
+
   return (
     <PageLayout title="Provas Agendadas">
       <div className="mb-6">
@@ -53,12 +86,8 @@ const Index = () => {
         exams={getCurrentPageItems()}
         onUpdate={updateExam}
         onDelete={deleteExam}
-        emptyTitle={isTodayFilter ? 'Nenhuma prova agendada para hoje.' : undefined}
-        emptyDescription={
-          isTodayFilter
-            ? 'Use os filtros acima para buscar provas de outras datas.'
-            : undefined
-        }
+        emptyTitle={emptyState.title}
+        emptyDescription={emptyState.description}
       />
 
       {filteredExams.length > ITEMS_PER_PAGE && (
