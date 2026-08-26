@@ -45,6 +45,12 @@ const Index = () => {
         exams={getCurrentPageItems()}
         onUpdate={updateExam}
         onDelete={deleteExam}
+        emptyTitle={isTodayFilter ? 'Nenhuma prova agendada para hoje.' : undefined}
+        emptyDescription={
+          isTodayFilter
+            ? 'Use os filtros acima para buscar provas de outras datas.'
+            : undefined
+        }
       />
 
       {filteredExams.length > ITEMS_PER_PAGE && (
