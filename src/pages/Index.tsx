@@ -7,7 +7,7 @@ import ExamPagination from '@/components/ExamPagination';
 import { useAuth } from '@/contexts/AuthContext';
 import PageLayout from '@/components/layout/PageLayout';
 import { useExamData } from '@/hooks/useExamData';
-import { useExamFilters } from '@/hooks/useExamFilters';
+import { useExamFilters, getTodayInManaus } from '@/hooks/useExamFilters';
 
 const ITEMS_PER_PAGE = 10;
 
