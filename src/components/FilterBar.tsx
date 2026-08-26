@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { FilterState } from '@/lib/types';
+import { getTodayInManaus } from '@/hooks/useExamFilters';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -34,7 +35,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
       studentName: '',
       module: '',
       pcNumber: '',
-      examDate: null,
+      examDate: getTodayInManaus(),
       examTime: '',
       status: 'all'
     };
@@ -182,22 +183,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
           </div>
         </div>
         
-        {/* Center the action buttons properly within the blue filter box */}
-        <div className="flex justify-center mt-4 space-x-4">
-          <Button
-            type="button" 
-            className="button-primary"
-            onClick={() => {
-              // Se nenhuma data estiver selecionada, filtra pelo dia de hoje
-              if (!filters.examDate) {
-                setFilters({ ...filters, examDate: new Date() });
-              } else {
-                setFilters({ ...filters });
-              }
-            }}
-          >
-            Filtrar
-          </Button>
+        {/* Ação de limpar filtros (a filtragem é aplicada automaticamente) */}
+        <div className="flex justify-center mt-4">
           <Button
             type="button"
             className="button-secondary"

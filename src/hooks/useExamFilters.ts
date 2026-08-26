@@ -29,6 +29,14 @@ const calendarDateToYmd = (date: Date): string => {
 };
 
 /**
+ * Retorna a data de "hoje" no fuso America/Manaus como Date local (00:00).
+ */
+export const getTodayInManaus = (): Date => {
+  const [year, month, day] = toManausDateStr(new Date()).split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
  * Obtém a data efetiva do exame para comparação.
  * Prioriza examTs; se null, usa examDate.
  */
@@ -49,7 +57,7 @@ export function useExamFilters(exams: ExamSchedule[]) {
     studentName: "",
     module: "",
     pcNumber: "",
-    examDate: null,
+    examDate: getTodayInManaus(),
     examTime: "",
     status: "all",
   });

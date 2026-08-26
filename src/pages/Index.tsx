@@ -7,7 +7,7 @@ import ExamPagination from '@/components/ExamPagination';
 import { useAuth } from '@/contexts/AuthContext';
 import PageLayout from '@/components/layout/PageLayout';
 import { useExamData } from '@/hooks/useExamData';
-import { useExamFilters } from '@/hooks/useExamFilters';
+import { useExamFilters, getTodayInManaus } from '@/hooks/useExamFilters';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -16,6 +16,14 @@ const Index = () => {
   const { exams, updateExam, deleteExam, loading } = useExamData(schoolId);
   const { filters, setFilters, filteredExams } = useExamFilters(exams);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const isTodayFilter =
+    filters.examDate instanceof Date &&
+    filters.examDate.toDateString() === getTodayInManaus().toDateString() &&
+    !filters.studentName &&
+    !filters.module;
+
+
 
   const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
   const getCurrentPageItems = () => {
@@ -45,6 +53,12 @@ const Index = () => {
         exams={getCurrentPageItems()}
         onUpdate={updateExam}
         onDelete={deleteExam}
+        emptyTitle={isTodayFilter ? 'Nenhuma prova agendada para hoje.' : undefined}
+        emptyDescription={
+          isTodayFilter
+            ? 'Use os filtros acima para buscar provas de outras datas.'
+            : undefined
+        }
       />
 
       {filteredExams.length > ITEMS_PER_PAGE && (

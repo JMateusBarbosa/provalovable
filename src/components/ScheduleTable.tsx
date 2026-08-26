@@ -12,6 +12,8 @@ interface ScheduleTableProps {
   exams: ExamSchedule[];                                          // Lista de exames a exibir
   onUpdate: (id: string, updatedExam: Partial<ExamSchedule>) => void;  // Função para atualizar um exame
   onDelete: (id: string) => void;                                 // Função para excluir um exame
+  emptyTitle?: string;                                            // Título alternativo do estado vazio
+  emptyDescription?: string;                                      // Descrição alternativa do estado vazio
 }
 
 /**
@@ -20,7 +22,7 @@ interface ScheduleTableProps {
  * Exibe uma tabela com os agendamentos de exames e
  * fornece funcionalidades para atualizar e excluir exames.
  */
-const ScheduleTable: React.FC<ScheduleTableProps> = ({ exams, onUpdate, onDelete }) => {
+const ScheduleTable: React.FC<ScheduleTableProps> = ({ exams, onUpdate, onDelete, emptyTitle, emptyDescription }) => {
   // Estado para controlar o diálogo de confirmação de exclusão
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
@@ -73,8 +75,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ exams, onUpdate, onDelete
     return (
       <div className="w-full py-16 flex flex-col items-center justify-center bg-white rounded-lg border animate-fade-up">
         <div className="text-center text-gray-500">
-          <p className="text-xl font-semibold mb-2">Nenhuma prova encontrada.</p>
-          <p className="text-sm">Tente ajustar os filtros ou agendar uma nova prova.</p>
+          <p className="text-xl font-semibold mb-2">{emptyTitle ?? 'Nenhuma prova encontrada.'}</p>
+          <p className="text-sm">{emptyDescription ?? 'Tente ajustar os filtros ou agendar uma nova prova.'}</p>
         </div>
       </div>
     );
