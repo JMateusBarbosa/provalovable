@@ -12,6 +12,8 @@ interface ScheduleTableProps {
   exams: ExamSchedule[];                                          // Lista de exames a exibir
   onUpdate: (id: string, updatedExam: Partial<ExamSchedule>) => void;  // Função para atualizar um exame
   onDelete: (id: string) => void;                                 // Função para excluir um exame
+  emptyTitle?: string;                                            // Título alternativo do estado vazio
+  emptyDescription?: string;                                      // Descrição alternativa do estado vazio
 }
 
 /**
