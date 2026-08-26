@@ -109,23 +109,35 @@ export function useExamFilters(exams: ExamSchedule[]) {
       result = result.filter((exam) => exam.status === (filters.status as ExamStatus));
     }
 
-    // Ordenação: "hoje" primeiro, depois cronológico
-    const todayStr = toManausDateStr(new Date());
+    // Ordenação
+    if (filters.examDate === null) {
+      // Busca em todo o histórico: do mais recente para o mais antigo
+      result.sort((a, b) => {
+        const aDate = getEffectiveDate(a);
+        const bDate = getEffectiveDate(b);
+        const aTime = aDate?.getTime() ?? 0;
+        const bTime = bDate?.getTime() ?? 0;
+        return bTime - aTime;
+      });
+    } else {
+      // Data específica: "hoje" primeiro (se houver), depois cronológico crescente
+      const todayStr = toManausDateStr(new Date());
 
-    result.sort((a, b) => {
-      const aDate = getEffectiveDate(a);
-      const bDate = getEffectiveDate(b);
+      result.sort((a, b) => {
+        const aDate = getEffectiveDate(a);
+        const bDate = getEffectiveDate(b);
 
-      const aIsToday = aDate ? toManausDateStr(aDate) === todayStr : false;
-      const bIsToday = bDate ? toManausDateStr(bDate) === todayStr : false;
+        const aIsToday = aDate ? toManausDateStr(aDate) === todayStr : false;
+        const bIsToday = bDate ? toManausDateStr(bDate) === todayStr : false;
 
-      if (aIsToday && !bIsToday) return -1;
-      if (!aIsToday && bIsToday) return 1;
+        if (aIsToday && !bIsToday) return -1;
+        if (!aIsToday && bIsToday) return 1;
 
-      const aTime = aDate?.getTime() ?? 0;
-      const bTime = bDate?.getTime() ?? 0;
-      return aTime - bTime;
-    });
+        const aTime = aDate?.getTime() ?? 0;
+        const bTime = bDate?.getTime() ?? 0;
+        return aTime - bTime;
+      });
+    }
 
     setFilteredExams(result);
   }, [filters, exams]);
