@@ -49,7 +49,7 @@ export function useExamFilters(exams: ExamSchedule[]) {
     studentName: "",
     module: "",
     pcNumber: "",
-    examDate: null,
+    examDate: getTodayInManaus(),
     examTime: "",
     status: "all",
   });
