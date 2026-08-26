@@ -34,7 +34,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
       studentName: '',
       module: '',
       pcNumber: '',
-      examDate: null,
+      examDate: getTodayInManaus(),
       examTime: '',
       status: 'all'
     };
