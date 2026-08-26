@@ -22,7 +22,7 @@ interface ScheduleTableProps {
  * Exibe uma tabela com os agendamentos de exames e
  * fornece funcionalidades para atualizar e excluir exames.
  */
-const ScheduleTable: React.FC<ScheduleTableProps> = ({ exams, onUpdate, onDelete }) => {
+const ScheduleTable: React.FC<ScheduleTableProps> = ({ exams, onUpdate, onDelete, emptyTitle, emptyDescription }) => {
   // Estado para controlar o diálogo de confirmação de exclusão
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
