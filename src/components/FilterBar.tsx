@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { FilterState } from '@/lib/types';
+import { getTodayInManaus } from '@/hooks/useExamFilters';
 
 interface FilterBarProps {
   filters: FilterState;
